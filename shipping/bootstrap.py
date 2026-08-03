@@ -63,6 +63,13 @@ SHIPPED_SCRIPTS = [
     "nexus.py",
 ]
 
+# Profile-aware config template. {profile} is one of:
+#   cloud  — all-cloud, works on ANY hardware, zero GPU needed (default)
+#   hybrid — cloud main + local eden-server when GPU permits
+#   local  — local brain primary, cloud fallback
+# {custom_providers} is only non-empty for hybrid/local.
+# {hook_python} is the portable interpreter (sys.executable on POSIX,
+# python.exe on Windows) — never a bare 'python3'.
 HERMES_CONFIG_TEMPLATE = """\
 _config_version: 33
 agent:
@@ -83,12 +90,7 @@ auxiliary:
 compression:
   target_ratio: 0.4
   threshold: 0.85
-custom_providers:
-  eden-local:
-    api_key: local
-    base_url: http://127.0.0.1:9191/v1
-    model: gemma-26b
-delegation:
+{custom_providers}delegation:
   max_concurrent_children: 6
   model: deepseek-v4-flash
   provider: deepseek
@@ -102,12 +104,12 @@ gateway:
     port: 9119
 hooks:
   on_session_start:
-    - command: python3 {scripts}/wake_on_start.py
+    - command: {hook_python} {scripts}/wake_on_start.py
       timeout: 30
   pre_llm_call:
-    - command: python3 {scripts}/inject_identity.py
+    - command: {hook_python} {scripts}/inject_identity.py
       timeout: 10
-    - command: python3 {scripts}/memory_cells_inject.py
+    - command: {hook_python} {scripts}/memory_cells_inject.py
       timeout: 10
 memory:
   auto_review: true
@@ -128,6 +130,63 @@ plugins:
 display:
   skin: haven
 """
+
+# The local-brain provider block — ONLY rendered for hybrid/local.
+LOCAL_PROVIDER_BLOCK = """custom_providers:
+  eden-local:
+    api_key: local
+    base_url: http://127.0.0.1:9191/v1
+    model: gemma-26b
+"""
+
+
+def detect_gpu() -> dict:
+    """Detect GPU presence/size. INFORMATIONAL ONLY — never forces a
+    profile. Returns {'present': bool, 'name': str, 'vram_gb': float}.
+    """
+    info = {"present": False, "name": "", "vram_gb": 0.0}
+    # nvidia-smi is the portable probe (same name on Linux/Windows)
+    try:
+        r = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=10)
+        if r.returncode == 0 and r.stdout.strip():
+            parts = r.stdout.strip().splitlines()[0].split(",")
+            info["present"] = True
+            info["name"] = parts[0].strip()
+            try:
+                info["vram_gb"] = round(float(parts[1].strip()) / 1024.0, 1)
+            except (ValueError, IndexError):
+                info["vram_gb"] = 0.0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    return info
+
+
+def gpu_suitable_for_local(info: dict, min_vram_gb: float = 8.0) -> bool:
+    """A GPU is suitable for the local brain only if it exists AND has
+    >= min_vram_gb. Small GPUs are NOT forced — cloud stays available."""
+    return info["present"] and info["vram_gb"] >= min_vram_gb
+
+
+def resolve_profile(requested: str, gpu: dict) -> str:
+    """Resolve the effective profile. User choice always wins:
+       cloud  → cloud (never forces local, even with a big GPU)
+       hybrid → hybrid if GPU suitable, else cloud with a notice
+       local  → local only if GPU suitable, else cloud with a notice
+    """
+    if requested == "cloud":
+        return "cloud"
+    if requested in ("hybrid", "local"):
+        if gpu_suitable_for_local(gpu):
+            return requested
+        log(f"WARN: {requested} profile requested but GPU "
+            f"{'missing' if not gpu['present'] else 'too small (' + str(gpu['vram_gb']) + 'GB < 8GB)'} "
+            f"— falling back to cloud (user can re-run with --profile)")
+        return "cloud"
+    log(f"WARN: unknown profile '{requested}' — defaulting to cloud")
+    return "cloud"
 
 
 def log(msg: str) -> None:
@@ -248,11 +307,25 @@ def main() -> int:
     ap.add_argument("--domain", default=os.environ.get("EDEN_SYNTH_DOMAIN", "companion"))
     ap.add_argument("--api-key", default=os.environ.get("EDEN_API_KEY", ""))
     ap.add_argument("--skip-key-verify", action="store_true")
+    ap.add_argument("--profile", default=os.environ.get("EDEN_PROFILE", "cloud"),
+                    choices=["cloud", "hybrid", "local"],
+                    help="cloud=all-cloud (default, any hardware); "
+                         "hybrid=cloud+local when GPU allows; local=local brain primary")
     ap.add_argument("--non-interactive", action="store_true")
     args = ap.parse_args()
 
     repo = Path(__file__).resolve().parent  # shipping/ dir
     seed_cells = repo / "seed" / "cells"
+
+    # ── 0. Profile resolution (user choice always wins) ────────────────
+    gpu = detect_gpu()
+    profile = resolve_profile(args.profile, gpu)
+    log(f"profile: {profile}"
+        + (f" (GPU: {gpu['name']} {gpu['vram_gb']}GB)" if gpu["present"] else " (no GPU detected)"))
+    # Portable interpreter for hooks: sys.executable on POSIX,
+    # python.exe on Windows — never a bare 'python3'.
+    hook_python = sys.executable.replace("\\", "/")
+    custom_providers = LOCAL_PROVIDER_BLOCK if profile in ("hybrid", "local") else ""
 
     # ── 1. Layout ──────────────────────────────────────────────────────
     step(1, "Layout")
@@ -270,10 +343,20 @@ def main() -> int:
     cfg_path = HERMES / "config.yaml"
     if not cfg_path.exists():
         cfg_path.write_text(HERMES_CONFIG_TEMPLATE.format(
-            scripts=str(SCRIPTS), synth_id=args.synth.lower().replace(" ", "_")))
-        log("hermes/config.yaml")
+            scripts=str(SCRIPTS), synth_id=args.synth.lower().replace(" ", "_"),
+            custom_providers=custom_providers, hook_python=hook_python))
+        log("hermes/config.yaml" + (f" (profile: {profile})" if profile != "cloud" else ""))
     else:
         log("hermes/config.yaml (exists, kept)")
+
+    # Start the local brain ONLY for hybrid/local with a suitable GPU.
+    # Never for cloud. If the user's GPU is small/needed elsewhere,
+    # cloud is the default and nothing local is loaded.
+    if profile in ("hybrid", "local"):
+        log(f"starting local brain (eden-server, gemma-26b) — {gpu['name']} {gpu['vram_gb']}GB")
+        # eden-server is started lazily by the runtime on first local call;
+        # the provider block is enough for now. If the user later wants it
+        # off, re-run with --profile cloud.
 
     # ── 3. API key → gateway.env + verify ──────────────────────────────
     step(3, "API key")
