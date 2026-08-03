@@ -1,0 +1,20 @@
+[Unit]
+Description=Eden API Gateway — Aggregate model router for Eden OE
+After=network-online.target eden-cpp.service
+Wants=network-online.target eden-cpp.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/haven/vault/repos/eden-oe
+ExecStart=/home/haven/vault/repos/eden-oe/.venv/bin/python -m uvicorn eden_gateway.server:app --host 127.0.0.1 --port 9100
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=default.target

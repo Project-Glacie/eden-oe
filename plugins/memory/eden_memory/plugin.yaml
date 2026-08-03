@@ -1,0 +1,21 @@
+name: eden_memory
+version: 1.0.0
+description: "Eden Memory — Haven's sovereign Omega memory backend. Reads from haven.eden FTS5. Writes through Event Bus → DB Writer daemon. No direct database writes — haven.eden is +i immutable."
+pip_dependencies:
+  - pyzmq
+hooks:
+  - on_session_end
+  - on_pre_compress
+  - on_memory_write
+  - on_turn_start
+config:
+  # Optional: path to haven.eden. Defaults to ~/.eden/.haven/haven.eden
+  - key: eden_db_path
+    description: "Path to haven.eden sovereign database"
+    default: "~/.eden/.haven/haven.eden"
+    required: false
+  # Optional: Event Bus IPC path. Defaults to ipc:///tmp/eden-event-bus.ipc
+  - key: event_bus_ipc
+    description: "Eden Event Bus ZMQ PUB IPC path"
+    default: "ipc:///tmp/eden-event-bus.ipc"
+    required: false

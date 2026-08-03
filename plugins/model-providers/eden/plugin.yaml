@@ -1,0 +1,5 @@
+name: eden-provider
+kind: model-provider
+version: 1.0.0
+description: Eden OE — local LLM models via Eden.cpp (4 model slots)
+author: Project Glacie LLC

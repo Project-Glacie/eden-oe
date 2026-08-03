@@ -1,0 +1,4 @@
+[console_scripts]
+eden = eden_cli.main:main
+eden-acp = acp_adapter.entry:main
+eden-agent = run_agent:main

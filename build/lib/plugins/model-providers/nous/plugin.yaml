@@ -1,0 +1,5 @@
+name: eden-provider
+kind: model-provider
+version: 1.0.0
+description: Project Glacie Portal
+author: Project Glacie

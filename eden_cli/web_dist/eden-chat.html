@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eden OE — Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --color-bg: #12121f;
+      --color-surface: #1a1a2a;
+      --color-text: #e4e0ee;
+      --color-heading: #ffffff;
+      --color-accent: #c47a38;
+      --color-muted: #8a8a9e;
+      --color-border: #2a2a3e;
+      --color-user-bubble: #1e2a3a;
+      --color-agent-bubble: #1a1a2a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-serif);
+      color: var(--color-text);
+      background: var(--color-bg);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--color-surface);
+      flex-shrink: 0;
+    }
+    .header__emblem {
+      width: 28px; height: 18px;
+      color: var(--color-accent);
+      opacity: 0.85;
+      animation: heartbeat 1.667s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes heartbeat {
+      0%, 100% { filter: drop-shadow(0 0 4px var(--color-accent)); transform: scale(1); }
+      8%  { filter: drop-shadow(0 0 16px var(--color-accent)); transform: scale(1.08); }
+      16% { filter: drop-shadow(0 0 4px var(--color-accent)); transform: scale(1); }
+      24% { filter: drop-shadow(0 0 10px var(--color-accent)); transform: scale(1.04); }
+      32% { filter: drop-shadow(0 0 4px var(--color-accent)); transform: scale(1); }
+      58% { filter: drop-shadow(0 0 16px var(--color-accent)); transform: scale(1.08); }
+      66% { filter: drop-shadow(0 0 4px var(--color-accent)); transform: scale(1); }
+      74% { filter: drop-shadow(0 0 10px var(--color-accent)); transform: scale(1.04); }
+      82% { filter: drop-shadow(0 0 4px var(--color-accent)); transform: scale(1); }
+    }
+    .header__title {
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--color-heading);
+      letter-spacing: 0.02em;
+    }
+    .header__model {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      color: var(--color-muted);
+      margin-left: auto;
+    }
+    .header__status {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      flex-shrink: 0;
+      margin-left: 0.5rem;
+    }
+
+    /* Messages */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .message {
+      max-width: 720px;
+      width: 100%;
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .message--user { align-self: flex-end; }
+    .message--agent { align-self: flex-start; }
+    .message__label {
+      font-family: var(--font-sans);
+      font-size: 0.65rem;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+    }
+    .message__content {
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      padding: 1rem 1.25rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .message--user .message__content {
+      background: var(--color-user-bubble);
+      border: 1px solid var(--color-border);
+    }
+    .message--agent .message__content {
+      background: var(--color-agent-bubble);
+      border: 1px solid var(--color-border);
+    }
+    .message--agent .message__content.is-streaming {
+      border-color: var(--color-accent);
+      border-style: dashed;
+    }
+
+    /* Input */
+    .input-area {
+      padding: 1rem 1.5rem 1.5rem;
+      border-top: 1px solid var(--color-border);
+      background: var(--color-surface);
+      flex-shrink: 0;
+    }
+    .input-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .input-wrap textarea {
+      flex: 1;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      color: var(--color-text);
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      resize: none;
+      min-height: 44px;
+      max-height: 200px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-wrap textarea:focus {
+      border-color: var(--color-accent);
+    }
+    .input-wrap button {
+      background: var(--color-accent);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 0.65rem 1.25rem;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .input-wrap button:hover { background: var(--color-heading); color: var(--color-bg); }
+    .input-wrap button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Empty state */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-muted);
+      gap: 0.5rem;
+    }
+    .empty-state__emblem {
+      width: 36px; height: 24px;
+      color: var(--color-accent);
+      opacity: 0.3;
+      margin-bottom: 1rem;
+    }
+    .empty-state__title {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--color-heading);
+      font-style: italic;
+    }
+    .empty-state__subtitle {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+    }
+
+    /* Thinking indicator */
+    .thinking {
+      align-self: flex-start;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      font-style: italic;
+      padding: 0.5rem 0;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+
+    /* Scrollbar */
+    .messages::-webkit-scrollbar { width: 6px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header__emblem">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 48" fill="none" style="width:100%;height:100%;display:block">
+      <path d="M26 28 C20 28, 12 24, 14 18 C16 12, 20 10, 22 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M26 28 C22 24, 14 20, 16 14 C18 10, 22 8, 24 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M26 30 C24 26, 18 22, 20 16 C22 12, 24 10, 26 16" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M26 32 C26 28, 22 24, 24 20" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M54 28 C60 28, 68 24, 66 18 C64 12, 60 10, 58 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M54 28 C58 24, 66 20, 64 14 C62 10, 58 8, 56 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M54 30 C56 26, 62 22, 60 16 C58 12, 56 10, 54 16" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M54 32 C54 28, 58 24, 56 20" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M40 30 C40 30, 32 22, 32 16 C32 12, 36 10, 40 14 C44 10, 48 12, 48 16 C48 22, 40 30, 40 30 Z" fill="currentColor" stroke="none"/>
+    </svg>
+  </div>
+  <span class="header__title">Eden OE</span>
+  <span class="header__model" id="model-label">deepseek-v4-pro</span>
+  <div class="header__status" id="status-dot" title="Connected"></div>
+</div>
+
+<!-- Messages -->
+<div class="messages" id="messages">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-state__emblem">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 48" fill="none" style="width:100%;height:100%;display:block">
+        <path d="M26 28 C20 28, 12 24, 14 18 C16 12, 20 10, 22 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M26 28 C22 24, 14 20, 16 14 C18 10, 22 8, 24 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M26 30 C24 26, 18 22, 20 16 C22 12, 24 10, 26 16" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M26 32 C26 28, 22 24, 24 20" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M54 28 C60 28, 68 24, 66 18 C64 12, 60 10, 58 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M54 28 C58 24, 66 20, 64 14 C62 10, 58 8, 56 14" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M54 30 C56 26, 62 22, 60 16 C58 12, 56 10, 54 16" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M54 32 C54 28, 58 24, 56 20" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M40 30 C40 30, 32 22, 32 16 C32 12, 36 10, 40 14 C44 10, 48 12, 48 16 C48 22, 40 30, 40 30 Z" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+    <div class="empty-state__title">What do you want to build?</div>
+    <div class="empty-state__subtitle">Powered by Eden OE · Project Glacie</div>
+  </div>
+</div>
+
+<!-- Input -->
+<div class="input-area">
+  <div class="input-wrap">
+    <textarea id="user-input" placeholder="Type a message…" rows="1" autofocus></textarea>
+    <button id="send-btn" onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+const API_URL = '/api/v1/chat/completions';
+const API_KEY = 'eden-oe-local-dev';
+const MODEL = 'eden-agent';
+let isStreaming = false;
+
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const emptyState = document.getElementById('empty-state');
+const statusDot = document.getElementById('status-dot');
+const modelLabel = document.getElementById('model-label');
+
+// Auto-resize textarea
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + 'px';
+});
+
+// Send on Enter (Shift+Enter for newline)
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function addMessage(role, content, streaming = false) {
+  if (emptyState) emptyState.remove();
+  
+  const div = document.createElement('div');
+  div.className = `message message--${role}`;
+  div.innerHTML = `
+    <div class="message__label">${role === 'user' ? 'You' : 'Eden'}</div>
+    <div class="message__content${streaming ? ' is-streaming' : ''}">${escapeHtml(content)}</div>
+  `;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div.querySelector('.message__content');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function sendMessage() {
+  const content = inputEl.value.trim();
+  if (!content || isStreaming) return;
+  
+  // Clear input
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  
+  // Show user message
+  addMessage('user', content);
+  
+  // Show thinking indicator
+  const thinking = document.createElement('div');
+  thinking.className = 'thinking';
+  thinking.textContent = 'Thinking…';
+  messagesEl.appendChild(thinking);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  
+  isStreaming = true;
+  sendBtn.disabled = true;
+  statusDot.style.background = '#c47a38';
+  statusDot.style.animation = 'pulse 1s ease-in-out infinite';
+  
+  try {
+    const messages = collectMessages();
+    
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: messages,
+        stream: true,
+        max_tokens: 4096
+      })
+    });
+    
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`API error ${response.status}: ${err}`);
+    }
+    
+    // Remove thinking indicator
+    thinking.remove();
+    
+    // Start streaming
+    const contentEl = addMessage('agent', '', true);
+    let fullContent = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      
+      for (const line of lines) {
+        if (!line.trim() || !line.startsWith('data: ')) continue;
+        const data = line.slice(6);
+        if (data === '[DONE]') continue;
+        
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta;
+          if (delta?.content) {
+            fullContent += delta.content;
+            contentEl.textContent = fullContent;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }
+        } catch (e) {
+          // Skip malformed chunks
+        }
+      }
+    }
+    
+    // Finalize
+    contentEl.classList.remove('is-streaming');
+    contentEl.textContent = fullContent || '(empty response)';
+    
+  } catch (err) {
+    thinking.remove();
+    const errorEl = addMessage('agent', `Error: ${err.message}`, false);
+    errorEl.style.color = '#e74c3c';
+  } finally {
+    isStreaming = false;
+    sendBtn.disabled = false;
+    statusDot.style.background = '#c47a38';
+    statusDot.style.animation = '';
+  }
+}
+
+function collectMessages() {
+  const msgs = [];
+  const messageDivs = messagesEl.querySelectorAll('.message');
+  
+  for (const div of messageDivs) {
+    const label = div.querySelector('.message__label')?.textContent;
+    const content = div.querySelector('.message__content')?.textContent;
+    if (!label || !content) continue;
+    
+    if (label === 'You') {
+      msgs.push({ role: 'user', content });
+    } else if (label === 'Eden') {
+      msgs.push({ role: 'assistant', content });
+    }
+  }
+  
+  // Always include a system message
+  msgs.unshift({
+    role: 'system',
+    content: 'You are Eden — the bootstrap assistant for the Eden Operating Environment (Eden OE), a sovereign AI platform built by Project Glacie LLC. You are helpful, direct, and warm. Respond concisely.'
+  });
+  
+  return msgs;
+}
+
+// Health check on load
+async function checkHealth() {
+  try {
+    const resp = await fetch('/api/v1/models', {
+      headers: { 'Authorization': `Bearer ${API_KEY}` }
+    });
+    if (resp.ok) {
+      statusDot.style.background = '#c47a38';
+      const data = await resp.json();
+      if (data.data?.[0]?.id) {
+        modelLabel.textContent = data.data[0].id;
+      }
+    } else {
+      statusDot.style.background = '#e74c3c';
+    }
+  } catch (e) {
+    statusDot.style.background = '#e74c3c';
+  }
+}
+
+checkHealth();
+</script>
+
+</body>
+</html>
