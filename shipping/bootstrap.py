@@ -97,7 +97,10 @@ compression:
 gateway:
   platforms:
     discord:
-      enabled: true
+      # OPTIONAL extension — OFF by default. Only becomes active when
+      # the user supplies a DISCORD_BOT_TOKEN. The TUI always works
+      # regardless. Not every Eden OE instance runs a Discord bridge.
+      enabled: false
       token: ${{DISCORD_BOT_TOKEN}}
   webchat:
     enabled: true
