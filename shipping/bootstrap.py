@@ -43,7 +43,8 @@ LOGS = EDEN / "logs"
 SHIPPED_SCRIPTS = [
     # Core memory stack
     "memory_pipeline.py", "ledger.py", "memory_triggers.py",
-    "memory_cells_db.py", "memory_cells_inject.py", "consolidate.py",
+    "memory_cells_db.py", "memory_cells_inject.py", "memory_db.py",
+    "consolidate.py",
     "ouroboros_grader.py", "ouroboros_daemon.py", "ouroboros_curator.py",
     # Identity + awareness
     "inject_identity.py", "identity_bootstrap.py", "identity_compiler.py",
