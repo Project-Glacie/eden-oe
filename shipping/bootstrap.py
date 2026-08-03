@@ -107,6 +107,8 @@ hooks:
   pre_llm_call:
     - command: python3 {scripts}/inject_identity.py
       timeout: 10
+    - command: python3 {scripts}/memory_cells_inject.py
+      timeout: 10
 memory:
   auto_review: true
   backend: eden
@@ -373,12 +375,15 @@ def main() -> int:
             ("EdenOE-gateway", "onlogon", "-m eden_cli.main gateway run"),
             ("EdenOE-memory", "minute", f"{SCRIPTS / 'memory_pipeline.py'}"),
             ("EdenOE-drive-tick", "minute", f"{SCRIPTS / 'drive_tick.py'}"),
+            ("EdenOE-cell-curator", "minute", f"{SCRIPTS / 'cell_curator.py'}"),
+            ("EdenOE-memory-db", "daily", f"{SCRIPTS / 'memory_db.py'} ingest"),
+            ("EdenOE-weekly-review", "weekly", f"{SCRIPTS / 'weekly_self_review.py'}"),
         ):
             subprocess.run(["schtasks", "/create", "/f", "/tn", name,
                             "/sc", sc] + (["/mo", "30"] if sc == "minute" else []) +
                            ["/tr", f'"{py}" {args_str}'],
                            capture_output=True, text=True)
-        log("schtasks: gateway, memory (30m), drive-tick (30m)")
+        log("schtasks: gateway, memory, drive-tick, cell-curator (30m); memory-db (daily); weekly-review")
     else:
         subprocess.run(["crontab", "-l"], capture_output=True, text=True)
         cron_lines = []
@@ -389,14 +394,18 @@ def main() -> int:
         except Exception:
             pass
         cron_lines = [l for l in cron_lines if "memory_pipeline" not in l
-                      and "drive_tick" not in l]
+                      and "drive_tick" not in l and "cell_curator" not in l
+                      and "memory_db" not in l and "weekly_self_review" not in l]
         cron_lines += [
             f"*/30 * * * * {py} {SCRIPTS / 'memory_pipeline.py'} >> {LOGS / 'memory_pipeline.log'} 2>&1",
             f"*/30 * * * * {py} {SCRIPTS / 'drive_tick.py'} >> {LOGS / 'drive_tick.log'} 2>&1",
+            f"*/30 * * * * {py} {SCRIPTS / 'cell_curator.py'} >> {LOGS / 'cell_curator.log'} 2>&1",
+            f"0 3 * * * {py} {SCRIPTS / 'memory_db.py'} ingest >> {LOGS / 'memory_db.log'} 2>&1",
+            f"0 6 * * 1 {py} {SCRIPTS / 'weekly_self_review.py'} >> {LOGS / 'weekly_self_review.log'} 2>&1",
         ]
         subprocess.run(["crontab", "-"], input="\n".join(cron_lines) + "\n",
                        text=True, capture_output=True)
-        log("cron: memory pipeline + drive tick (30m)")
+        log("cron: memory pipeline, drive tick, cell curator (30m); memory db (03:00); weekly self-review (Mon 06:00)")
 
     # ── 8. Ceremony ────────────────────────────────────────────────────
     step(8, "Ceremony")
