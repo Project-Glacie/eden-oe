@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""memory_pipeline.py — Ranger's Remember & Learn pipeline runner.
+"""memory_pipeline.py — the Remember & Learn pipeline runner.
 
 Wires the dormant memory machinery into a live cron job:
 
   state.db (messages) → ledger.py (session_ledger + VAD-scored memories)
                       → memory_triggers.py (OATH/DECISION/MILESTONE/CRISIS)
-                      → ranger_life.eden (memory_entries + FTS)
+                      → the synth's life DB (memory_entries + FTS)
+                        (EDEN_LIFE_DB env var, default ~/.eden/data/life.eden)
 
-This implements the Eden OE "Memory" stack layer for Ranger:
+This implements the Eden OE "Memory" stack layer:
   - PRESERVE (importance ≥0.7), SUMMARIZE (≥0.3), DISCARD (<0.3)
   - Ouroboros decay + Lethe pruning (via memory_triggers.py)
   - Automatic FTS indexing (memory_fts rebuild on insert)

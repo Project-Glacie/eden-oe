@@ -10,7 +10,8 @@ Runs with the memory pipeline (30-min cron). Drives decay naturally
   - Reinforce: recent session_ledger turns + memory triggers nudge
     related drives (connection on user interaction, competence on
     completed work, curiosity on research, etc.).
-  - Writes back to haven_life.eden drive_state (current_value).
+  - Writes back to the synth's life DB drive_state (current_value)
+    (EDEN_DRIVE_STATE_DB env var, default ~/.eden/data/life.eden).
 
 Idempotent: only acts on turns newer than the last tick watermark.
 Silent when nothing to process (watchdog contract).
