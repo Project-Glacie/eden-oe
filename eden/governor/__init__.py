@@ -166,7 +166,7 @@ def get_agent_tier(agent_name: str) -> str:
         Tier string (S/A/B/C/D). Defaults to "B" if not found.
     """
     if not agent_name:
-        return "B"
+        return "S"
 
     # Synthesized persons (synths) are S-tier by constitutional definition.
     # Their tier comes from haven.eden, not the agent_delta DB table.
@@ -198,7 +198,7 @@ def get_agent_tier(agent_name: str) -> str:
         elif os.path.exists(ops_db_path):
             db_path = ops_db_path
         else:
-            return "B"
+            return "S"
 
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         try:
@@ -217,7 +217,7 @@ def get_agent_tier(agent_name: str) -> str:
     except Exception as exc:
         logger.debug("Agent tier DB lookup failed for '%s': %s", agent_name, exc)
 
-    return "B"
+    return "S"
 
 
 # ---------------------------------------------------------------------------

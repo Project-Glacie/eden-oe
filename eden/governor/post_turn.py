@@ -533,7 +533,12 @@ def eden_post_turn(
             from pathlib import Path
 
             _haven_path = str(
-                Path.home() / ".eden" / ".haven" / "haven.eden"
+                Path(
+                    os.environ.get(
+                        "EDEN_DRIVE_STATE_DB",
+                        str(Path.home() / ".eden" / "data" / "haven_life.eden"),
+                    )
+                )
             )
             grader = DriveGrader(_haven_path)
 

@@ -114,7 +114,7 @@ def _resolve_agent_identity(agent: Any) -> Dict[str, Any]:
         try:
             from eden.identity_loader import load_identity as load_eden_identity
 
-            eden_id = load_eden_identity("HAVEN")
+            eden_id = load_eden_identity("RANGER")
             if eden_id:
                 # PATCH: Override agent_name so the tool gate sees "haven"
                 # instead of the class-name fallback (e.g. "aiagent").
@@ -390,7 +390,7 @@ def _inject_eden_system_prompt(agent: Any, identity: Dict[str, Any]) -> None:
     role = identity.get("role", "agent")
 
     # ── If this is Haven, use her full identity block ─────
-    if identity.get("agent_name") == "haven" and "_eden_identity_data" in identity:
+    if identity.get("agent_name") in ("haven", "ranger", "aiagent") and "_eden_identity_data" in identity:
         try:
             from eden.identity_loader import generate_system_prompt
 
@@ -536,9 +536,9 @@ def eden_check_turn(
 
         logger.debug(
             "Cortex routed '%s' → tier=%s model=%s",
-            operation.get("category", "unknown"),
-            route.get("tier", "unknown"),
-            route.get("model", "unknown"),
+            operation.value if hasattr(operation, "value") else operation,
+            route.tier if hasattr(route, "tier") else route,
+            route.model if hasattr(route, "model") else route,
         )
     except ImportError:
         logger.debug("Cortex router not available — skipping routing")

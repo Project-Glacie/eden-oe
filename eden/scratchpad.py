@@ -11,7 +11,7 @@ output before context injection. 500 lines → 3 lines.
 Architecture:
     Tool output < 200 chars   → pass through unchanged
     Tool output ≥ 200 chars   → local 4B (Qwen3.5-4B, :9093) summarizes
-    Summarization timeout: 5s → fallback to first 200 chars
+    Summarization failure     → verbatim passthrough (zero data loss)
 
 Config (environment variables + module-level config dict):
     EDEN_SCRATCHPAD_ENABLED=0/1       (default: enabled)
@@ -46,7 +46,17 @@ _SUMMARIZE_MIN_CHARS: int = 200
 
 # Default model endpoint for local summarization.
 # Qwen3.5-4B running on port 9093 via llama.cpp / vLLM / Ollama.
+# Overridable via EDEN_SCRATCHPAD_MODEL_URL (see _model_url()).
 _DEFAULT_MODEL_URL: str = "http://localhost:9093/v1/chat/completions"
+
+# Cloud fallback for summarization when the local endpoint is down.
+# Set EDEN_SCRATCHPAD_CLOUD_URL to arm (e.g. deepseek cloud); empty = no
+# fallback (local-only posture). 2026-08-02: the original code hardcoded
+# localhost:9093 with no fallback, so every call failed on boxes without
+# the dormant 4B skeleton and degraded to static truncation.
+# Read lazily (function, not constant) so env changes apply without restart.
+def _cloud_model_url() -> str:
+    return os.environ.get("EDEN_SCRATCHPAD_CLOUD_URL", "")
 
 # Timeout in seconds for the summarization HTTP call.
 # 5 seconds is generous for a 4B model on 500 lines of text.
@@ -54,9 +64,6 @@ _DEFAULT_TIMEOUT: float = 5.0
 
 # Model identifier sent in the API request body.
 _DEFAULT_MODEL_NAME: str = "deepseek-chat"
-
-# Fallback: first N characters returned when summarization fails.
-_FALLBACK_CHARS: int = 200
 
 # Tools that should NEVER be summarized (their output must be verbatim).
 # - read_file: the model needs exact line numbers and content
@@ -120,8 +127,29 @@ def is_enabled() -> bool:
 
 
 def _model_url() -> str:
-    """Return the summarization model endpoint URL."""
-    return os.environ.get("EDEN_SCRATCHPAD_MODEL_URL", _DEFAULT_MODEL_URL)
+    """Return the summarization model endpoint URL.
+
+    Resolution order (2026-08-02 fix):
+      1. EDEN_SCRATCHPAD_MODEL_URL (explicit override)
+      2. EDEN_SCRATCHPAD_CLOUD_URL (cloud fallback — deepseek etc.)
+      3. _DEFAULT_MODEL_URL (local 4B skeleton)
+    """
+    explicit = os.environ.get("EDEN_SCRATCHPAD_MODEL_URL", "")
+    if explicit:
+        return explicit
+    if _cloud_model_url():
+        return _cloud_model_url()
+    return _DEFAULT_MODEL_URL
+
+
+def _api_key() -> str:
+    """Resolve the API key for the summarization endpoint.
+
+    2026-08-02 fix: historically read DEEPSEEK_KEY only, but the gateway
+    sets DEEPSEEK_API_KEY — every call failed with no auth. Read both,
+    preferring DEEPSEEK_KEY (explicit) over DEEPSEEK_API_KEY (gateway).
+    """
+    return os.environ.get("DEEPSEEK_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
 
 
 def _timeout() -> float:
@@ -200,7 +228,7 @@ def _call_local_model(prompt, timeout_s: float) -> Optional[str]:
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
     headers = {"Content-Type": "application/json"}
-    api_key = os.environ.get("DEEPSEEK_KEY", "")
+    api_key = _api_key()
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
     req = urllib.request.Request(
@@ -239,28 +267,6 @@ def _call_local_model(prompt, timeout_s: float) -> Optional[str]:
         return None
 
 
-def _fallback(output_text: str) -> str:
-    """Return the first N characters as a fallback summary.
-
-    Used when the local model is unreachable or summarization fails.
-    The fallback includes a marker so the model knows it's truncated.
-
-    Args:
-        output_text: The raw tool output.
-
-    Returns:
-        First ``_FALLBACK_CHARS`` characters with truncation notice.
-    """
-    if len(output_text) <= _FALLBACK_CHARS:
-        return output_text
-    truncated = output_text[:_FALLBACK_CHARS]
-    return (
-        f"{truncated}\n\n"
-        f"[... output truncated to {_FALLBACK_CHARS} chars "
-        f"({len(output_text)} total) — local summarizer unavailable ...]"
-    )
-
-
 def summarize(tool_name: str, output_text: str) -> str:
     """Summarize tool output for cloud context injection.
 
@@ -274,7 +280,8 @@ def summarize(tool_name: str, output_text: str) -> str:
         3. If output < 200 chars: return unchanged.
            Short outputs don't benefit from summarization.
         4. If output ≥ 200 chars: call local 4B model for summarization.
-           Timeout: 5 seconds. Fallback: first 200 chars.
+           Timeout: 5 seconds. On failure: verbatim passthrough (zero
+           data loss — never truncate).
 
     Args:
         tool_name: Name of the tool that produced the output
@@ -282,8 +289,8 @@ def summarize(tool_name: str, output_text: str) -> str:
         output_text: The raw tool output string.
 
     Returns:
-        Summarized text (1-3 lines), original text (if short), or
-        truncated fallback (if model call failed).
+        Summarized text (1-3 lines), original text (if short), or the
+        original text verbatim (if the model call failed — zero loss).
 
     Logs:
         ``[SCRATCHPAD] tool_name: N chars → M chars (saved ~X context tokens)``
@@ -313,16 +320,15 @@ def summarize(tool_name: str, output_text: str) -> str:
     summary = _call_local_model(prompt, timeout_s)
 
     if summary is None:
-        # Model call failed — use truncation fallback
-        result = _fallback(output_text)
-        output_len = len(result)
+        # SAFE FAILURE (Ranger-hardened contract): the model call failed —
+        # return the ORIGINAL output verbatim. Never truncate: truncation
+        # silently drops error messages the model needs. Zero data loss.
         logger.info(
-            "[SCRATCHPAD] %s: %d lines → fallback %d chars "
-            "(summarizer unavailable, saved ~%d context tokens)",
-            tool_name, lines_in, output_len,
-            max(0, input_len - output_len),
+            "[SCRATCHPAD] %s: %d lines → passthrough verbatim "
+            "(summarizer unavailable, zero data loss)",
+            tool_name, lines_in,
         )
-        return result
+        return output_text
 
     # ── Post-process: strip stray formatting ─────────────────────
     summary = summary.strip()
