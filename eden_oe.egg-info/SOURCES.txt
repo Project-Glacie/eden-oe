@@ -1,4 +1,6 @@
+LICENSE
 MANIFEST.in
+README.md
 batch_runner.py
 cli.py
 eden_bootstrap.py

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Eden runtime
+.eden/
+*.eden
+!seed/**/*.md
+state.db
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit
+.env
+gateway.env
+*.pem
+*.key
