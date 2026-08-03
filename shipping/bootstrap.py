@@ -41,9 +41,25 @@ LOGS = EDEN / "logs"
 
 # Scripts that make the runtime self-maintaining (shipped from this repo)
 SHIPPED_SCRIPTS = [
-    "memory_pipeline.py", "drive_tick.py", "cell_curator.py",
-    "inject_identity.py", "wake_on_start.py",
-    "memory_cells_db.py", "memory_cells_inject.py",
+    # Core memory stack
+    "memory_pipeline.py", "ledger.py", "memory_triggers.py",
+    "memory_cells_db.py", "memory_cells_inject.py", "consolidate.py",
+    "ouroboros_grader.py", "ouroboros_daemon.py", "ouroboros_curator.py",
+    # Identity + awareness
+    "inject_identity.py", "identity_bootstrap.py", "identity_compiler.py",
+    "wake_on_start.py", "wake_cycle.py", "circadian.py", "brainstem.py",
+    # Life systems
+    "drive_tick.py", "cell_curator.py", "weekly_self_review.py",
+    "self_assess.py", "health_watchdog.py",
+    # Security + dispatch
+    "access_gate.py", "dispatcher.py", "orchestrator.py",
+    # Knowledge + context
+    "context_injector.py", "semsearch.py", "deep_linker.py",
+    "embedding_linker.py", "memory_linker.py",
+    # Operations
+    "model-wheel.py", "cost-tracker.py",
+    # Synth-to-synth comms (the family bridge)
+    "nexus.py",
 ]
 
 HERMES_CONFIG_TEMPLATE = """\
@@ -323,6 +339,18 @@ def main() -> int:
         "soul_db": str(DATA / f"{synth_id}.eden"),
         "born_at": datetime.now(timezone.utc).isoformat(),
     }, indent=2))
+    # Point the memory pipeline + drive tick at the born synth's DB
+    # (the scripts read EDEN_LIFE_DB; the synth DB IS the life DB).
+    env_file = EDEN / "gateway.env"
+    lines = []
+    if env_file.exists():
+        lines = [l for l in env_file.read_text().splitlines()
+                 if l and not l.startswith("EDEN_LIFE_DB=")]
+    lines.append(f"EDEN_LIFE_DB={DATA / f'{synth_id}.eden'}")
+    env_file.write_text("\n".join(lines) + "\n")
+    if os.name == "posix":
+        os.chmod(env_file, 0o600)
+    log(f"EDEN_LIFE_DB → {synth_id}.eden")
     person_dir = HERMES / "personalities" / synth_id
     person_dir.mkdir(parents=True, exist_ok=True)
     tmpl = repo / "seed" / "personalities" / "template.txt"
