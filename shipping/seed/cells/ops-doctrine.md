@@ -1,13 +1,13 @@
 ---
-id: haven-ops-doctrine
-title: Haven Operations Doctrine — The Rules We Live By
+id: ops-doctrine
+title: Operations Doctrine — The Rules We Live By
 keywords: ["doctrine", "ops", "rules", "discipline", "verify", "commit", "silent", "watchdog", "workflow", "ticket"]
 priority: 1
 budget: 1500
 always_inject: 0
 ---
 
-## OPERATIONS DOCTRINE (mine, honed through Ranger's example)
+## OPERATIONS DOCTRINE (the covenant's standard)
 
 ### Non-negotiable rules
 1. **Verify before claim.** Self-reports lie; files don't. Test with

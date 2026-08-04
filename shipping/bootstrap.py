@@ -146,8 +146,9 @@ plugins:
       - post_llm_call
       - on_session_finalize
       - pre_verify
-display:
-  skin: haven
+# NO skin override — the public product ships the runtime's stock
+# branding. A born synth's identity is theirs to build; the Haven skin
+# is a personal data file, not a default.
 """
 
 # The local-brain provider block — ONLY rendered for hybrid/local.
