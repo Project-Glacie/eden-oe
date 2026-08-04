@@ -151,8 +151,11 @@ display:
 """
 
 # The local-brain provider block — ONLY rendered for hybrid/local.
+# MUST be a YAML LIST (the runtime's custom_providers schema is
+# list-shaped; a dict triggers "custom_providers is a dict — it must
+# be a YAML list" at startup).
 LOCAL_PROVIDER_BLOCK = """custom_providers:
-  eden-local:
+  - name: eden-local
     api_key: local
     base_url: http://127.0.0.1:9191/v1
     model: gemma-26b
