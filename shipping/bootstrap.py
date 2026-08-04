@@ -88,6 +88,14 @@ auxiliary:
     model: deepseek-v4-flash
     provider: deepseek
 compression:
+  # SAFETY: never drop conversation turns when the summary model fails.
+  # abort_on_summary_failure=True preserves ALL messages unchanged (the
+  # runtime aborts compression instead of inserting a placeholder and
+  # dropping the middle window). protect_first/last_n keep the
+  # irreplaceable head and tail verbatim.
+  abort_on_summary_failure: true
+  protect_last_n: 20
+  protect_first_n: 3
   target_ratio: 0.4
   threshold: 0.85
 {custom_providers}delegation:
