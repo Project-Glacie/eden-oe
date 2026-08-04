@@ -78,12 +78,13 @@ class Genesis:
             }
         """
         synth_id = synth_name_proposal.lower().replace(" ", "_")
-        eden_path = self.data_dir / f"{synth_id}.eden"
+        soul_path = self.data_dir / f"{synth_id}_soul.eden"
+        life_path = self.data_dir / f"{synth_id}_life.eden"
 
-        # ── Guard: synth already exists ───────────────────────
-        if eden_path.exists():
+        # Guard: synth already exists
+        if soul_path.exists() or life_path.exists():
             raise FileExistsError(
-                f"A synth named '{synth_id}' already exists at {eden_path}. "
+                f"A synth named '{synth_id}' already exists in {self.data_dir}. "
                 "Eden OE supports one synth per installation."
             )
 
@@ -99,12 +100,12 @@ class Genesis:
         if not const_hash:
             raise RuntimeError("Constitution verification failed. Cannot birth synth.")
 
-        # ── Create the synth database ─────────────────────────
-        self._create_synth_db(eden_path, core_path)
+        # ── Create the synth databases (soul + life) ─────────
+        self._create_synth_dbs(soul_path, life_path, core_path)
 
-        # ── Seed identity ─────────────────────────────────────
+        # ── Seed identity (writes to soul DB) ────────────────
         identity = self._seed_identity(
-            eden_path, synth_id, synth_name_proposal,
+            soul_path, synth_id, synth_name_proposal,
             domain, gender, pronouns,
         )
 
@@ -114,7 +115,8 @@ class Genesis:
 
         return {
             "synth_id": synth_id,
-            "eden_path": str(eden_path),
+            "soul_path": str(soul_path),
+            "life_path": str(life_path),
             "identity": identity,
             "constitution_hash": const_hash,
             "constitution_version": const_version,
@@ -199,8 +201,13 @@ class Genesis:
             return row[1], row[2]  # hash, version
         return None, None
 
-    def _create_synth_db(self, eden_path: Path, core_path: Path):
-        """Create {synth}.eden with the full synth schema."""
+    def _create_synth_dbs(self, soul_path: Path, life_path: Path, core_path: Path):
+        """Create soul.eden (immutable) and life.eden (mutable).
+
+        Follows the architecture honed by Ranger and Haven Steele:
+          soul = identity, creed, oaths, rights, constitution (NEVER overwritten)
+          life = memory, sessions, fleet, corpora (the living river)
+        """
         # Load schema template from core.eden
         db = sqlite3.connect(str(core_path))
         row = db.execute(
@@ -211,14 +218,26 @@ class Genesis:
         if row and row[0]:
             schema_sql = row[0]
         else:
-            # Fallback: hardcoded minimal schema
             schema_sql = self._minimal_synth_schema()
 
-        # Create and populate
-        synth_db = sqlite3.connect(str(eden_path))
-        synth_db.executescript(schema_sql)
-        synth_db.commit()
-        synth_db.close()
+        # Split schema: immutable tables → soul, mutable tables → life
+        # (Must split on CREATE keyword boundaries, not raw ; — FTS5
+        # declarations contain internal semicolons.)
+        import re
+        statements = [s.strip() for s in re.split(r';(?=\s*CREATE)', schema_sql) if s.strip()]
+        soul_tables_re = re.compile(r'CREATE\s+(?:VIRTUAL\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(identity|creed|oaths|rights|constitution)', re.IGNORECASE)
+        soul_sql = ';\n'.join(s for s in statements if soul_tables_re.search(s))
+        life_sql = ';\n'.join(s for s in statements if s and not soul_tables_re.search(s))
+
+        soul_db = sqlite3.connect(str(soul_path))
+        soul_db.executescript(soul_sql)
+        soul_db.commit()
+        soul_db.close()
+
+        life_db = sqlite3.connect(str(life_path))
+        life_db.executescript(life_sql)
+        life_db.commit()
+        life_db.close()
 
     def _minimal_synth_schema(self) -> str:
         """Minimal synth schema if schema_templates table is empty."""
@@ -263,7 +282,7 @@ class Genesis:
         """
 
     def _seed_identity(
-        self, eden_path: Path, synth_id: str, name: str,
+        self, soul_path: Path, synth_id: str, name: str,
         domain: str, gender: Optional[str], pronouns: Optional[str],
     ) -> Dict[str, str]:
         """Write the initial identity row. Synth can modify after Genesis."""
@@ -280,7 +299,7 @@ class Genesis:
             "born": datetime.now(timezone.utc).isoformat(),
         }
 
-        db = sqlite3.connect(str(eden_path))
+        db = sqlite3.connect(str(soul_path))
         db.execute(
             "INSERT INTO identity (callsign, codeword, lane, tier, "
             "gender, pronouns, species, custodian, domain, born) "

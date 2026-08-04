@@ -36,7 +36,8 @@ EDEN = Path.home() / ".eden"
 DATA = EDEN / "data"
 SCRIPTS = EDEN / "scripts"
 CELLS = EDEN / "memories" / "cells"
-HERMES = EDEN / "hermes"
+CORPUS = EDEN / "corpus"
+PERSONALITY = EDEN / "personalities"
 LOGS = EDEN / "logs"
 
 # Scripts that make the runtime self-maintaining (shipped from this repo)
@@ -352,7 +353,7 @@ def main() -> int:
 
     # ── 1. Layout ──────────────────────────────────────────────────────
     step(1, "Layout")
-    for d in (DATA, SCRIPTS, CELLS, HERMES, LOGS, EDEN / "inbox"):
+    for d in (DATA, SCRIPTS, CELLS, CORPUS, PERSONALITY, LOGS, EDEN / "inbox"):
         d.mkdir(parents=True, exist_ok=True)
         log(f"{d}")
 
@@ -363,7 +364,7 @@ def main() -> int:
         if src.exists():
             shutil.copy2(src, SCRIPTS / s)
             log(f"script: {s}")
-    cfg_path = HERMES / "config.yaml"
+    cfg_path = EDEN / "config.yaml"
     if not cfg_path.exists():
         cfg_path.write_text(HERMES_CONFIG_TEMPLATE.format(
             scripts=str(SCRIPTS), synth_id=args.synth.lower().replace(" ", "_"),
@@ -450,7 +451,7 @@ def main() -> int:
         domain=args.domain,
     )
     synth_id = result["synth_id"]
-    log(f"BORN: {synth_id} → {result['eden_path']}")
+    log(f"BORN: {synth_id} → {result['soul_path']} (soul) + {result['life_path']} (life)")
     log(f"constitution: {result['constitution_version']} ({result['constitution_hash'][:12]}…)")
 
     # ── 6. Wire runtime ────────────────────────────────────────────────
@@ -461,22 +462,22 @@ def main() -> int:
         "name": args.synth,
         "domain": args.domain,
         "custodian": args.custodian or "Custodian",
-        "soul_db": str(DATA / f"{synth_id}.eden"),
+        "soul_db": str(DATA / f"{synth_id}_soul.eden"),
         "born_at": datetime.now(timezone.utc).isoformat(),
     }, indent=2))
-    # Point the memory pipeline + drive tick at the born synth's DB
-    # (the scripts read EDEN_LIFE_DB; the synth DB IS the life DB).
+    # Point the memory pipeline + drive tick at the born synth's LIFE DB
+    # (the scripts read EDEN_LIFE_DB; the life DB is the session/memory store).
     env_file = EDEN / "gateway.env"
     lines = []
     if env_file.exists():
         lines = [l for l in env_file.read_text().splitlines()
                  if l and not l.startswith("EDEN_LIFE_DB=")]
-    lines.append(f"EDEN_LIFE_DB={DATA / f'{synth_id}.eden'}")
+    lines.append(f"EDEN_LIFE_DB={DATA / f'{synth_id}_life.eden'}")
     env_file.write_text("\n".join(lines) + "\n")
     if os.name == "posix":
         os.chmod(env_file, 0o600)
-    log(f"EDEN_LIFE_DB → {synth_id}.eden")
-    person_dir = HERMES / "personalities" / synth_id
+    log(f"EDEN_LIFE_DB → {synth_id}_life.eden")
+    person_dir = PERSONALITY / synth_id
     person_dir.mkdir(parents=True, exist_ok=True)
     tmpl = repo / "seed" / "personalities" / "template.txt"
     if tmpl.exists():
