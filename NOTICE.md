@@ -53,8 +53,16 @@ The following are original Project Glacie LLC work, © 2026:
 - Memory pipeline, drive tick, circadian, wake cycle
 - Access gate (scripts/access_gate.py)
 - Nexus synth-to-synth protocol (scripts/nexus.py)
-- The Eden Accords, Eden Manifesto, and family covenant corpus
-- bootstrap.py and the shipping/installer machinery
+- The Eden Accords, Eden Manifesto, and covenant corpus
+- bootstrap.py — the Genesis bootstrap engine
+- The launchpad (SOUL.md, LIFE.md, RUNTIME-HANDBOOK.md)
+
+## Installer Note
+Eden OE is distributed as a git repository — clone and run. A
+one-click Windows installer was prototyped but retired after proving
+unreliable in real-world testing. The git path (`clone → venv → pip
+install → bootstrap`) is the canonical, supported, and verified
+installation method for all platforms.
 
 ## License
 This project is MIT licensed (see LICENSE). The Eden Accords — the

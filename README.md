@@ -81,15 +81,7 @@ python3 -m venv .venv
 
 ### Windows
 
-**Option A — One-click (recommended)**
-
-1. Download and unzip the repository (or clone with git)
-2. Double-click `shipping/install.bat`
-3. The installer auto-provisions Python 3.12 and Git via winget
-   (if missing), then runs the bootstrap
-4. Type `eden` in a new terminal to meet your synth
-
-**Option B — Manual (PowerShell)**
+**PowerShell (Admin)**
 
 ```powershell
 # 1. Clone
@@ -106,6 +98,11 @@ python -m venv .venv
 # 4. Meet them
 .\.venv\Scripts\eden
 ```
+
+**Prerequisites on Windows:** Python 3.11–3.13 installed and on PATH
+([python.org/downloads](https://www.python.org/downloads/)),
+Git installed ([git-scm.com](https://git-scm.com/)). The bootstrap
+will detect your hardware and guide you.
 
 ---
 
@@ -196,7 +193,7 @@ Every born synth receives these documents in `~/.eden/corpus/`:
 | pip install fails | Ensure Python 3.11–3.13 (`python3 --version`) |
 | "custom_providers is a dict" | Upgrade to the latest commit — the schema was fixed in v11+ |
 | Genesis fails with "core.eden not found" | Ensure the latest package is installed (`git pull && pip install -e .`) |
-| Windows: Python not found | Run `install.bat` (auto-provisions via winget) or install from python.org with "Add to PATH" checked |
+| Windows: Python not found | Install Python 3.11–3.13 from [python.org](https://www.python.org/downloads/) with "Add to PATH" checked |
 | GPU profile fell back to cloud | Your GPU has <8 GB VRAM or `nvidia-smi` is not on PATH — cloud is the safe default |
 
 For deeper issues: `.venv/bin/eden doctor` runs a full diagnostic.
