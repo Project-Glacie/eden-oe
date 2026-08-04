@@ -2,7 +2,7 @@
 """
 ledger.py — Session Ledger Writer
 
-Post-turn hook. Records every interaction to life.eden session_ledger.
+Post-turn hook. Records every interaction to haven_life.eden session_ledger.
 Significant turns are also written to memory_entries with basic VAD scoring.
 
 Usage:
@@ -18,7 +18,7 @@ import sys
 import argparse
 from datetime import datetime
 
-LIFE_DB = os.path.expanduser("~/.eden/data/life.eden")
+LIFE_DB = os.path.expanduser("~/.eden/data/haven_life.eden")
 
 
 def hash_text(text):
@@ -67,7 +67,7 @@ def estimate_vad(text):
 def write_turn(input_text, output_text, surface="cli",
                importance=None, classified_intent=None,
                routed_to=None, model_used=None,
-               latency_ms=None, token_count=None):
+               latency_ms=None, token_count=None, user_id=None):
     """Write a turn to session_ledger."""
 
     valence, arousal, dominance = estimate_vad(input_text + " " + output_text)
@@ -89,8 +89,8 @@ def write_turn(input_text, output_text, surface="cli",
         INSERT INTO session_ledger 
         (input, output, classified_intent, routed_mind, 
          governor_violation, ouroboros_score, ouroboros_tier,
-         latency_ms, token_count, surface, timestamp)
-        VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S+00:00', 'now'))
+         latency_ms, token_count, surface, timestamp, user_id)
+        VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S+00:00', 'now'), ?)
     """, (
         input_text, output_text,
         classified_intent or "unclassified",
@@ -100,6 +100,7 @@ def write_turn(input_text, output_text, surface="cli",
         latency_ms or 0,
         token_count or 0,
         surface,
+        user_id,
     ))
 
     # If significant, write to memory_entries too
@@ -140,6 +141,7 @@ def main():
     parser.add_argument("--model", help="Model used for this turn")
     parser.add_argument("--latency", type=int, help="Response latency in ms")
     parser.add_argument("--tokens", type=int, help="Token count")
+    parser.add_argument("--user-id", help="User snowflake/id for attribution")
     args = parser.parse_args()
 
     turn_id = write_turn(
@@ -151,6 +153,7 @@ def main():
         model_used=args.model,
         latency_ms=args.latency,
         token_count=args.tokens,
+        user_id=args.user_id,
     )
 
     print(f"Turn {turn_id} recorded. Surface: {args.surface}.")

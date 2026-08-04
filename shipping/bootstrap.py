@@ -49,6 +49,8 @@ SHIPPED_SCRIPTS = [
     # Identity + awareness
     "inject_identity.py", "identity_bootstrap.py", "identity_compiler.py",
     "wake_on_start.py", "wake_cycle.py", "circadian.py", "brainstem.py",
+    # Real-time turn capture (post_llm_call hook — the memory INPUT chain)
+    "capture_turn.py",
     # Life systems
     "drive_tick.py", "cell_curator.py", "weekly_self_review.py",
     "self_assess.py", "health_watchdog.py",
@@ -122,6 +124,12 @@ hooks:
       timeout: 10
     - command: {hook_python} {scripts}/memory_cells_inject.py
       timeout: 10
+  post_llm_call:
+    # REAL-TIME MEMORY INPUT: record every completed turn into the
+    # synth's session_ledger so the memory pipeline has fresh input.
+    # (The chain was broken: interactive turns never reached the ledger.)
+    - command: {hook_python} {scripts}/capture_turn.py
+      timeout: 30
 memory:
   auto_review: true
   backend: eden
