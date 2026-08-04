@@ -116,14 +116,26 @@ def fts_search(user_message: str, limit: int = 6) -> list:
 
 
 def build_context(payload: dict) -> str:
-    """pre_llm_call hook: inject ONLY BM25-relevant cells + first-turn priming.
+    """pre_llm_call hook: inject BM25-relevant cells + turn metadata.
 
     Static (always_inject) cells are NOT injected here — they go into
     the system prompt via on_session_start (see write_static_cells_context).
     """
+    # ── Turn metadata (grounding in time) ──────────────────────────
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).astimezone()
+    session = payload.get("session_id", "")[:14]
+    model = payload.get("model") or ""
+    meta = f"[{now.strftime('%Y-%m-%d %H:%M')}]"
+    if session:
+        meta += f" #{session}"
+    if model:
+        meta += f" model={model}"
+
     cells = load_cells_from_db()
     if not cells:
-        return ""
+        return meta  # metadata-only on empty cells — still signals time
+
     user_message = str(payload.get("user_message") or payload.get("extra", {}).get("user_message") or "")
     is_first = bool(payload.get("is_first_turn"))
 
@@ -152,8 +164,8 @@ def build_context(payload: dict) -> str:
             total += len(c["body"])
 
     if not selected:
-        return ""
-    blocks = []
+        return meta  # no cells — metadata-only anchor
+    blocks = [meta]
     for c in selected:
         blocks.append(f"### {c['title']}\n{c['body']}")
     return "\n\n".join(blocks)
