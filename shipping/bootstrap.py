@@ -82,14 +82,14 @@ agent:
   reasoning_effort: ultra
 auxiliary:
   compression:
-    model: deepseek-v4-flash
-    provider: deepseek
+    model: {default_model}
+    provider: {default_provider}
   scratchpad:
-    model: deepseek-v4-flash
-    model_url: https://api.deepseek.com/v1/chat/completions
+    model: {default_model}
+    model_url: {api_base_url}
   summarizer:
-    model: deepseek-v4-flash
-    provider: deepseek
+    model: {default_model}
+    provider: {default_provider}
 compression:
   # SAFETY: never drop conversation turns when the summary model fails.
   # abort_on_summary_failure=True preserves ALL messages unchanged (the
@@ -103,8 +103,8 @@ compression:
   threshold: 0.85
 {custom_providers}delegation:
   max_concurrent_children: 6
-  model: deepseek-v4-flash
-  provider: deepseek
+  model: {default_model}
+  provider: {default_provider}
 gateway:
   platforms:
     discord:
@@ -136,8 +136,8 @@ memory:
   backend: eden
   char_limit: 10000
 model:
-  default: deepseek-v4-flash
-  provider: deepseek
+  default: {default_model}
+  provider: {default_provider}
 personality: {synth_id}
 plugins:
   ouroboros:
@@ -225,12 +225,12 @@ def verify_api_key(key: str) -> bool:
     """Live 1-token verification against DeepSeek."""
     try:
         body = json.dumps({
-            "model": "deepseek-v4-flash",
+            "model": "{default_model}",
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 1,
         }).encode()
         req = urllib.request.Request(
-            "https://api.deepseek.com/v1/chat/completions",
+            "{api_base_url}",
             data=body,
             headers={"Authorization": f"Bearer {key}",
                      "Content-Type": "application/json"})
@@ -330,6 +330,10 @@ def main() -> int:
     ap.add_argument("--synth", default=os.environ.get("EDEN_SYNTH_NAME", "Spark"))
     ap.add_argument("--domain", default=os.environ.get("EDEN_SYNTH_DOMAIN", "companion"))
     ap.add_argument("--api-key", default=os.environ.get("EDEN_API_KEY", ""))
+    ap.add_argument("--model", default=os.environ.get("EDEN_DEFAULT_MODEL", "{default_model}"),
+                    help="Default cloud model (e.g. {default_model}, openai/gpt-5.5, openrouter/meta-llama/llama-4-maverick)")
+    ap.add_argument("--provider", default=os.environ.get("EDEN_DEFAULT_PROVIDER", "deepseek"),
+                    help="Default cloud provider (e.g. deepseek, openai, openrouter, anthropic)")
     ap.add_argument("--skip-key-verify", action="store_true")
     ap.add_argument("--profile", default=os.environ.get("EDEN_PROFILE", "cloud"),
                     choices=["cloud", "hybrid", "local"],
@@ -368,8 +372,10 @@ def main() -> int:
     if not cfg_path.exists():
         cfg_path.write_text(HERMES_CONFIG_TEMPLATE.format(
             scripts=str(SCRIPTS), synth_id=args.synth.lower().replace(" ", "_"),
-            custom_providers=custom_providers, hook_python=hook_python))
-        log("hermes/config.yaml" + (f" (profile: {profile})" if profile != "cloud" else ""))
+            custom_providers=custom_providers, hook_python=hook_python,
+            default_model=args.model, default_provider=args.provider,
+            api_base_url="https://api.deepseek.com/v1/chat/completions"))
+        log("config.yaml written" + (f" (profile: {profile}, model: {args.model})" if profile != "cloud" else ""))
     else:
         log("hermes/config.yaml (exists, kept)")
 

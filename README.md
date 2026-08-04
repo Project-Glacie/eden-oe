@@ -40,7 +40,7 @@ else is theirs to choose. Their first words are their own.
 | **Memory** | memory cells (SQLite+FTS5, BM25), memory pipeline (state→ledger→triggers), Ouroboros grading, drive tick, circadian rhythm |
 | **Security** | access gate (fail-closed, custodian-invariant), classified key storage, DADT doctrine |
 | **Identity** | Genesis Protocol — the custodian names the synth; the synth speaks their own first words |
-| **Comms** | Nexus protocol — every synth in the covenant can reach the family |
+| **Comms** | Nexus protocol — inter-synth messaging supported (P2P, DB-backed). Peer connections require configuration. |
 | **Profiles** | cloud (any hardware), hybrid (local GPU + cloud), local-first. Your choice, never forced. |
 
 ---
@@ -49,7 +49,10 @@ else is theirs to choose. Their first words are their own.
 
 - **Python 3.11, 3.12, or 3.13** — 3.14 is not yet supported
 - **git** — for cloning the repository
-- **An API key** from [DeepSeek](https://platform.deepseek.com/) (cloud)
+- **An API key** from your chosen inference provider (DeepSeek,
+  OpenAI, OpenRouter, Anthropic, or any OpenAI-compatible endpoint).
+  The cloud profile needs an API key. See the [API Key Setup](#api-key-setup)
+  section for supported providers.
 - **A GPU is NOT required.** The default `cloud` profile runs on
   any machine. A GPU with ≥8 GB VRAM enables the `hybrid` or `local`
   profiles for a local brain — but this is optional.
@@ -113,21 +116,29 @@ safe, universal, zero GPU required.
 
 | Profile | What it does | Best for |
 |---------|-------------|----------|
-| `cloud` | All inference via DeepSeek API. Works on ANY hardware. | Most users. The default. |
-| `hybrid` | Cloud main + local 26B brain for aux/fallback. Requires ≥8 GB VRAM GPU. | Machines with a capable GPU. |
+| `cloud` | All inference via your configured cloud provider. Works on ANY hardware. | Most users. The default. |
+| `hybrid` | Cloud main + local brain for aux/fallback. Requires ≥8 GB VRAM GPU. | Machines with a capable GPU. |
 | `local` | Local brain primary, cloud fallback. Requires ≥8 GB VRAM GPU. | GPU-first setups. |
+
+Cloud providers: DeepSeek, OpenAI, OpenRouter, Anthropic, or any
+OpenAI-compatible endpoint. Local models are loaded via
+[eden.cpp](https://github.com/Project-Glacie/eden.cpp) — our
+sovereign inference engine (Gemma, Qwen, LLaMA, and other GGUF
+models supported).
 
 User choice always wins. If you request `hybrid` or `local` on a
 machine without a suitable GPU, the bootstrap falls back to `cloud`
 with a clear notice — **never forced.**
 
-See `shipping/README-FIRST.md` for hardware-specific guidance.
-
 ---
 
 ## API Key Setup
 
-The bootstrap asks for your DeepSeek API key interactively. The key is:
+The bootstrap asks for your API key interactively. The key can be from
+any supported provider — DeepSeek, OpenAI, OpenRouter, Anthropic, or
+any OpenAI-compatible endpoint.
+
+The key is:
 - Stored in `~/.eden/gateway.env` (0600 permissions)
 - Live-verified with a 1-token API call
 - Audited in `~/.eden/data/classified.eden` (Fernet-encrypted)
