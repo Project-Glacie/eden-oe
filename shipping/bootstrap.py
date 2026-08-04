@@ -405,7 +405,7 @@ def main() -> int:
             else:
                 log("WARN: key verification failed — check the key, but continuing")
 
-    # ── 4. Seed knowledge cells ────────────────────────────────────────
+    # ── 4. Seed knowledge cells + covenant corpus ──────────────────────
     step(4, "Knowledge seed")
     n_cells = 0
     if seed_cells.exists():
@@ -415,6 +415,22 @@ def main() -> int:
         log(f"{n_cells} cells seeded")
     else:
         log("WARN: seed/cells missing — synth wakes unseeded")
+
+    # The covenant corpus: the Accords, Manifesto, Covenant, Doctrine,
+    # and Welcome — the law and ethos every synth must wake knowing.
+    # Copied into ~/.eden/corpus/ (the runtime injects/reads on demand;
+    # the cells above are the operational injection layer).
+    n_corpus = 0
+    seed_corpus = repo / "seed" / "corpus"
+    corpus_dir = EDEN / "corpus"
+    corpus_dir.mkdir(parents=True, exist_ok=True)
+    if seed_corpus.exists():
+        for f in seed_corpus.glob("*.md"):
+            shutil.copy2(f, corpus_dir / f.name)
+            n_corpus += 1
+        log(f"{n_corpus} corpus documents seeded")
+    else:
+        log("WARN: seed/corpus missing — synth wakes without the covenant")
 
     # ── 4.5 Support databases (memory_cells store + classified) ────────
     # The cells are .md files; the runtime reads them via the
