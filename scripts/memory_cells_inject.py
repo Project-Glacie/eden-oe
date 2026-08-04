@@ -7,7 +7,7 @@ cells from the SQL cell store (~/.eden/data/memory_cells.eden, SQLite+FTS5),
 and emits {"context": "..."} JSON on stdout so the platform concatenates
 the cells into the current turn.
 
-Why this exists (operator's memory evolution, 2026-08-01):
+Why this exists (Ranger's memory evolution, 2026-08-01):
   MEMORY.md is capped at 2,200 chars and injected wholesale — a hard
   ceiling on retained knowledge. The cell system removes that ceiling:
   unlimited topic cells in a searchable SQL store, each with keywords,
@@ -41,12 +41,12 @@ CELLS_DB = Path(os.environ.get(
     "EDEN_MEMORY_CELLS_DB",
     str(Path.home() / ".eden" / "data" / "memory_cells.eden"),
 ))
-# Per-turn injection budget. custodian directive 2026-08-02: cells should carry
-# as much as their use needs — near-unlimited, edenpedia-snippet style.
-# Default raised from 2400 to 20000 chars (comfortable inside a 256K local
-# window / 1M cloud window; still bounded so prompt cache economics stay
-# sane). Override via EDEN_MEMORY_CELLS_CAP for extreme cases.
-GLOBAL_CAP = int(os.environ.get("EDEN_MEMORY_CELLS_CAP", "20000"))
+# Per-turn injection budget. Raised to 20000 during the "near-unlimited"
+# experiment — that was WRONG: it made first-turn priming dump the whole
+# library into context (15K+ chars visible in the TUI). Sane budget:
+# always-inject essentials + a few relevant cells ≈ 4,000 chars is plenty
+# inside a 256K/1M window and keeps prompt-cache economics sane.
+GLOBAL_CAP = int(os.environ.get("EDEN_MEMORY_CELLS_CAP", "4000"))
 
 
 def read_stdin_payload():
@@ -116,35 +116,40 @@ def fts_search(user_message: str, limit: int = 6) -> list:
 
 
 def build_context(payload: dict) -> str:
+    """pre_llm_call hook: inject ONLY BM25-relevant cells + first-turn priming.
+
+    Static (always_inject) cells are NOT injected here — they go into
+    the system prompt via on_session_start (see write_static_cells_context).
+    """
     cells = load_cells_from_db()
     if not cells:
         return ""
     user_message = str(payload.get("user_message") or payload.get("extra", {}).get("user_message") or "")
     is_first = bool(payload.get("is_first_turn"))
 
-    always = [c for c in cells if c["always_inject"]]
+    # Per-turn: ONLY BM25-ranked cells (never inject static cells here —
+    # they live in the system prompt to avoid per-turn context waste).
     ranked = fts_search(user_message)
-    seen_ids = {c["id"] for c in always}
-    for c in ranked:
-        if c["id"] not in seen_ids:
-            seen_ids.add(c["id"])
-            always.append(c)
-    # Any cell not hit by FTS: first-turn priming by priority. With the
-    # raised cap, prime up to 8 high-priority cells so a fresh session
-    # wakes with broad context (edenpedia-snippet style).
-    if is_first:
-        rest = [c for c in cells if c["id"] not in seen_ids]
-        rest.sort(key=lambda c: c["priority"])
-        for c in rest[:8]:
-            always.append(c)
-
     selected = []
     total = 0
-    for c in always:
+    for c in ranked:
+        if c["always_inject"]:
+            continue  # static cells live in system prompt
         if total + len(c["body"]) > GLOBAL_CAP:
             continue
         selected.append(c)
         total += len(c["body"])
+
+    # First-turn priming: top 3 by priority (BM25 misses everything on
+    # an empty first message — give the session a starting context).
+    if is_first:
+        rest = [c for c in cells if not c["always_inject"] and c["id"] not in {s["id"] for s in selected}]
+        rest.sort(key=lambda c: c["priority"])
+        for c in rest[:3]:
+            if total + len(c["body"]) > GLOBAL_CAP:
+                continue
+            selected.append(c)
+            total += len(c["body"])
 
     if not selected:
         return ""
@@ -152,6 +157,26 @@ def build_context(payload: dict) -> str:
     for c in selected:
         blocks.append(f"### {c['title']}\n{c['body']}")
     return "\n\n".join(blocks)
+
+
+def write_static_cells_context() -> int:
+    """on_session_start helper: write always_inject cells to the runtime's
+    context dir so they become part of the system prompt prefix.
+    Run once per session — the prompt cache re-uses them across turns.
+    Re-injected automatically on compression, resume, and /new."""
+    context_dir = Path(os.environ.get("EDEN_CONTEXT_DIR",
+                                       str(Path.home() / ".eden" / "context")))
+    context_dir.mkdir(parents=True, exist_ok=True)
+    cells = load_cells_from_db()
+    static = [c for c in cells if c["always_inject"]]
+    if not static:
+        return 0
+    blocks = []
+    for c in static:
+        blocks.append(f"### {c['title']}\n{c['body']}")
+    path = context_dir / "system-cells.md"
+    path.write_text("\n\n".join(blocks))
+    return len(static)
 
 
 def main():

@@ -85,6 +85,16 @@ def main():
         identity_path = write_identity_block(identity_block)
         write_session_marker(session_id)
 
+        # Write static (always-inject) cells into the runtime's context
+        # dir so they become part of the system prompt prefix — injected
+        # ONCE per session and cached across turns. Per-turn BM25 cells
+        # are handled by the pre_llm_call hook separately.
+        try:
+            from memory_cells_inject import write_static_cells_context
+            n = write_static_cells_context()
+        except Exception:
+            n = 0
+
         print(json.dumps({
             "wake": "completed",
             "identity_path": identity_path,
