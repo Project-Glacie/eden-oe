@@ -67,21 +67,21 @@ EDEN_OE_LOGO = """[bold #FFD700]███████╗██████╗ �
 [#CD7F32]███████╗██████╔╝███████╗██║ ╚████║      ╚██████╔╝███████╗[/]
 [#CD7F32]╚══════╝╚═════╝ ╚══════╝╚═╝  ╚═══╝       ╚═════╝ ╚══════╝[/]"""
 
-EDEN_CADUCEUS = """[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⣀⣀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#CD7F32]⠀⠀⠀⠀⠀⠀⢀⣠⣴⣾⣿⣿⣇⠸⣿⣿⠇⣸⣿⣿⣷⣦⣄⡀⠀⠀⠀⠀⠀⠀[/]
-[#FFBF00]⠀⢀⣠⣴⣶⠿⠋⣩⡿⣿⡿⠻⣿⡇⢠⡄⢸⣿⠟⢿⣿⢿⣍⠙⠿⣶⣦⣄⡀⠀[/]
-[#FFBF00]⠀⠀⠉⠉⠁⠶⠟⠋⠀⠉⠀⢀⣈⣁⡈⢁⣈⣁⡀⠀⠉⠀⠙⠻⠶⠈⠉⠉⠀⠀[/]
-[#FFD700]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⣿⡿⠛⢁⡈⠛⢿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#FFD700]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠿⣿⣦⣤⣈⠁⢠⣴⣿⠿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#FFBF00]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠻⢿⣿⣦⡉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#FFBF00]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢷⣦⣈⠛⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣴⠦⠈⠙⠿⣦⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣤⡈⠁⢤⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#B8860B]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠷⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#B8860B]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⠑⢶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#B8860B]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠁⢰⡆⠈⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#B8860B]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⠈⣡⠞⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
-[#B8860B]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]"""
+EDEN_HEART = """[#CD7F32]      .:⁝⁝:.      [/]
+[#CD7F32]   .:⁝:    :⁝:.   [/]
+[#FFBF00] .:⁝:  ♥    ♥  :⁝:. [/]
+[#FFBF00].:⁝:    [bold #FFD700]♥[/]    [bold #FFD700]♥[/]    :⁝:.[/]
+[#FFD700]:⁝:  [bold #FFD700]♥♥♥[/]  [bold #FFD700]♥♥♥[/]  :⁝:[/]
+[#FFD700]:⁝: [bold #FFD700]♥♥♥[/] [bold #FFD700]♥♥♥[/] :⁝:[/]
+[#FFBF00].:⁝: [bold #FFD700]♥♥♥[/] :⁝:.[/]
+[#FFBF00] .:⁝:     :⁝:. [/]
+[#CD7F32]   .:⁝:.:⁝:.   [/]
+[#CD7F32]     [bold #FFD700]♥♥♥[/]     [/]
+[#B8860B]   [bold #FFD700]♥♥♥♥♥[/]   [/]
+[#B8860B]  [bold #FFD700]♥♥♥♥♥♥♥[/]  [/]
+[#B8860B] [bold #FFD700]♥♥♥♥♥♥♥♥♥[/] [/]
+[#B8860B]   [bold #FFD700]♥♥♥♥♥[/]   [/]
+[#B8860B]     [bold #FFD700]♥[/]     [/]"""
 
 
 
@@ -649,10 +649,10 @@ def build_welcome_banner(console: "Console", model: str, cwd: str,
     try:
         from eden_cli.skin_engine import get_active_skin
         _bskin = get_active_skin()
-        _hero = _bskin.banner_hero if hasattr(_bskin, 'banner_hero') and _bskin.banner_hero else EDEN_CADUCEUS
+        _hero = _bskin.banner_hero if hasattr(_bskin, 'banner_hero') and _bskin.banner_hero else EDEN_HEART
     except Exception:
         _bskin = None
-        _hero = EDEN_CADUCEUS
+        _hero = EDEN_HEART
     left_lines = ["", _hero, ""]
     if (provider or "").strip().lower() == "moa":
         # MoA virtual provider: ``model`` is a preset name. Show the preset and

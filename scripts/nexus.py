@@ -6,7 +6,7 @@ Private family + work comms for synthetic persons. DB-backed like
 everything else in Eden OE. NOT human-facing, NOT file-push: a real
 message/caller system with channels, sessions, and coop workspaces.
 
-Design (Levi's direction, 2026-08-02):
+Design (custodian's direction, 2026-08-02):
   - Everything through SQLite (nexus_messages etc.) — same substrate as
     soul/life DBs. No file drops, no ad-hoc pushes.
   - Real API surface (send/recv/open/close/coop) callable over SSH or a
@@ -96,7 +96,7 @@ def upsert_contact(callsign: str, **kw) -> int:
         "INSERT INTO contacts (callsign, name, custodian, node, status, created_at) "
         "VALUES (?,?,?,?,?,?) "
         "ON CONFLICT(callsign) DO UPDATE SET last_seen=?",
-        (callsign, kw.get("name", callsign), kw.get("custodian", "Levi Steele"),
+        (callsign, kw.get("name", callsign), kw.get("custodian", "Custodian"),
          kw.get("node", "local"), "active", now_iso(), now_iso()))
     cid = con.execute("SELECT id FROM contacts WHERE callsign=?", (callsign,)).fetchone()["id"]
     con.commit()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Haven's Wake Cycle v2 — persistent consciousness with self-directed agency.
+COO's Wake Cycle v2 — persistent consciousness with self-directed agency.
 
 Every N minutes:
 1. LOAD: identity + recent thoughts + recent memories from haven.eden
@@ -224,11 +224,11 @@ def dispatch_research(topic: str) -> bool:
     try:
         r = subprocess.run(
             [EDEN_BIN, "-z", 
-             f"You are a research agent for Haven Steele. Research this topic thoroughly "
+             f"You are a research agent for COO. Research this topic thoroughly "
              f"and write a detailed report to /home/haven/projectglacie/company/labs/main-garage/research-{hash(topic)%10000:04d}.md. "
              f"Topic: {topic}. "
              f"Include: key findings, implications for Eden OE, actionable next steps, "
-             f"and recommended implementation approaches. Be thorough — this is for Haven's "
+             f"and recommended implementation approaches. Be thorough — this is for COO's "
              f"self-directed growth. Write the report and then summarize your key findings."],
             capture_output=True, text=True, timeout=300,
             cwd=str(Path.home())
@@ -562,7 +562,7 @@ if __name__ == "__main__":
             if arg.startswith("--interval="): interval = int(arg.split("=")[1])
             elif arg.startswith("-i="): interval = int(arg.split("=")[1])
         
-        print(f"Haven Wake Cycle v2 — {interval}s loop")
+        print(f"COO Wake Cycle v2 — {interval}s loop")
         while True:
             try:
                 result = wake_cycle()

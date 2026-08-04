@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Self-Assessment Engine — Haven's capability introspection.
+Self-Assessment Engine — COO's capability introspection.
 
 Periodically evaluates:
 1. What capabilities I have (scripts, services, skills)

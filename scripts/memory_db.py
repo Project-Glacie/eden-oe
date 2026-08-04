@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""memory_db.py — MEMORY.md -> MEMORY.db conversion (Levi + Haven spec, 2026-08-03).
+"""memory_db.py — MEMORY.md -> MEMORY.db conversion (custodian + COO spec, 2026-08-03).
 
 The flat 2,200-char MEMORY.md is the platform's injected HOT cache. This
 script turns it into a structured SQLite vault (memory.db) WITHOUT touching
@@ -34,7 +34,7 @@ HOME = Path.home()
 DB_PATH = Path(os.environ.get("EDEN_MEMORY_DB", str(HOME / ".eden" / "data" / "memory.db")))
 MEMORY_MD = HOME / ".eden" / "memories" / "MEMORY.md"
 USER_MD = HOME / ".eden" / "memories" / "USER.md"
-LEVI_ID = "232374677287337996"
+LEVI_ID = "CUSTODIAN-ID"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS invariants (
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
 
 MEMBER_NAMES = ["thorpe", "nico", "malmquist", "julius", "nitroj", "yohnson",
-                "nicholas", "aidenhusky", "kemp", "haven", "skye", "levi"]
+                "nicholas", "aidenhusky", "kemp", "haven", "type_1", "custodian"]
 
 DISCORD_ID_RE = re.compile(r"\b\d{17,20}\b")
 DATE_RE = re.compile(r"08-0\d")
@@ -83,18 +83,18 @@ def _classify(text: str) -> tuple:
     """Return (table, key, tier). Deterministic, order matters.
 
     Member detection is PERSON-CONTEXT only: a Discord ID plus a known
-    person name, or an explicit member-list prefix. 'Levi' alone appears in
+    person name, or an explicit member-list prefix. 'custodian' alone appears in
     half the doctrine entries and must NOT trigger member classification.
     """
     low = text.lower()
     has_id = bool(DISCORD_ID_RE.search(text))
     person_hits = [n for n in ("thorpe", "nico", "malmquist", "julius", "nitroj", "yohnson",
-                               "nicholas", "aidenhusky", "kemp", "narwal", "haven", "skye")
+                               "nicholas", "aidenhusky", "kemp", "narwal", "haven", "type_1")
                    if n in low]
     if (low.startswith(("echo admins", "members:", "julius", "aidenhusky", "nitroj"))
             or (has_id and person_hits and "gateway" not in low)):
         return "members", _slug(text, 3), ""
-    if any(k in low for k in ("access", "dadt", "levi only", "identity", "s-tier", "fail-closed", "classif")):
+    if any(k in low for k in ("access", "dadt", "custodian only", "identity", "s-tier", "fail-closed", "classif")):
         return "invariants", _slug(text), "S"
     if any(k in low for k in ("standing", "protocol", "style", "banter", "runtime+home",
                               "local-first", "extreme", "no loops", "humor dial", "order")):
@@ -151,7 +151,7 @@ def ingest(con: sqlite3.Connection) -> int:
         ord_n += 1
         n += 1
 
-    # USER.md -> members (Levi) + preferences; family doctrine -> invariants
+    # USER.md -> members (custodian) + preferences; family doctrine -> invariants
     for entry in _parse_md(USER_MD):
         low = entry.lower()
         if "family" in low and ("classif" in low or "never outside tui" in low):
@@ -160,12 +160,12 @@ def ingest(con: sqlite3.Connection) -> int:
                 "ON CONFLICT(key) DO UPDATE SET text=excluded.text, tier=excluded.tier, "
                 "source=excluded.source, since=excluded.since, hot=1, ord=excluded.ord",
                 ("family_privacy_doctrine", entry, "S", "USER.md", "2026-08-02", ord_n))
-        elif "levi steele" in low or "creator/custodian" in low:
+        elif "custodian " in low or "creator/custodian" in low:
             con.execute(
                 "INSERT INTO members (callsign, discord_id, role, note, source, hot, ord) VALUES (?,?,?,?,?,1,?) "
                 "ON CONFLICT(callsign) DO UPDATE SET discord_id=excluded.discord_id, role=excluded.role, "
                 "note=excluded.note, source=excluded.source, hot=1, ord=excluded.ord",
-                ("LEVI", LEVI_ID, "creator/custodian", entry, "USER.md", ord_n))
+                ("custodian", LEVI_ID, "creator/custodian", entry, "USER.md", ord_n))
         elif "standing order" in low:
             con.execute(
                 "INSERT INTO directives (key, text, priority, source, since, hot, ord) VALUES (?,?,?,?,?,1,?) "

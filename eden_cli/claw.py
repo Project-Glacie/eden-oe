@@ -348,7 +348,7 @@ def _cmd_migrate(args):
     )
     print(
         color(
-            "│          ⚕ Eden OE — OpenClaw Migration                 │",
+            "│          ❤️ Eden OE — OpenClaw Migration                 │",
             Colors.MAGENTA,
         )
     )
@@ -574,7 +574,7 @@ def _cmd_cleanup(args):
     )
     print(
         color(
-            "│          ⚕ Eden OE — OpenClaw Cleanup                   │",
+            "│          ❤️ Eden OE — OpenClaw Cleanup                   │",
             Colors.MAGENTA,
         )
     )

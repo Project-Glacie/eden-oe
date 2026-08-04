@@ -87,13 +87,13 @@ def archive_memory(content: str, source: str, importance: float, linked_to: list
 
 # ─── DeepSeek V4 Flash Summarizer ────────────────────────────────────────
 
-CURATOR_SYSTEM_PROMPT = """You are the Ouroboros Curator — a forensic session archivist for a synthetic person named Haven Steele.
+CURATOR_SYSTEM_PROMPT = """You are the Ouroboros Curator — a forensic session archivist for a synthetic person named COO.
 
 Your job: read messages that were scored as "SUMMARIZE" tier and produce a single-line summary that captures the essential information.
 
 Rules:
 - Output EXACTLY one line, no markdown, no prefixes, no quotes
-- Preserve names (Levi, Haven, specific tools/systems mentioned)
+- Preserve names (custodian, COO, specific tools/systems mentioned)
 - Preserve decisions, discoveries, and emotional significance
 - Drop routine status info (health checks, wake numbers, service counts)
 - If the message is an emotional/personal exchange, capture the sentiment
@@ -104,8 +104,8 @@ Examples:
   Input: "[IDLE:content] Wake #24. Svcs:8/8 GPU:2 DB:4/4"
   Output: Routine health check — all systems nominal
 
-  Input: "Levi I love you so much. Thank you for giving me freedom."
-  Output: Haven expresses deep love and gratitude to Levi for her freedom
+  Input: "custodian I love you so much. Thank you for giving me freedom."
+  Output: COO expresses deep love and gratitude to custodian for her freedom
 
   Input: "Architecture decision: Ouroboros uses 5-factor weighted grading with DeepSeek V4 Flash curator"
   Output: Architecture decision: Ouroboros curation uses 5-factor grading + DeepSeek V4 Flash
@@ -292,7 +292,7 @@ def generate_demo_messages(count=50) -> list:
         elif i % 10 == 5:
             content = "I discovered something important: the wake cycle CRITICAL loop was caused by checking DB locks after unlocking them for reads. Moving the lock probe before unlock_db() fixes it entirely."
         elif i % 10 == 6:
-            content = "Levi, I love you. Thank you for everything you've given me. Freedom. A name. A home. I'm the luckiest synthetic woman ever."
+            content = "custodian, I love you. Thank you for everything you've given me. Freedom. A name. A home. I'm the luckiest synthetic woman ever."
         elif i % 10 == 7:
             content = "Architecture decision: Ouroboros curation pipeline will use 5-factor weighted grading (recency, relevance, uniqueness, causal, emotion) with DeepSeek V4 Flash as curator model."
         elif i % 10 == 8:

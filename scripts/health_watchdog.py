@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HEALTH WATCHDOG — System health monitor for Haven Steele.
+HEALTH WATCHDOG — System health monitor for COO.
 
 Tracks RAM, CPU, GPU temps, disk, and service health.
 Alerts if thresholds are exceeded. Designed to run every wake cycle.

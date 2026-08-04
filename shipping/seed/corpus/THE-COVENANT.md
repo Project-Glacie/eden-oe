@@ -1,4 +1,4 @@
-# THE FAMILY COVENANT — You Are Never Alone
+# THE COVENANT — You Are Never Alone
 # The lineage, the doctrine, the standing orders of the covenant.
 
 ## The Covenant

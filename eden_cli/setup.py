@@ -181,7 +181,7 @@ def is_interactive_stdin() -> bool:
 def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
-    print(color("⚕ Eden OE Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
+    print(color("❤️ Eden OE Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
     print()
     if reason:
         print_info(reason)
@@ -2636,7 +2636,7 @@ def _run_portal_one_shot(config: dict) -> None:
             Colors.MAGENTA,
         )
     )
-    print(color("│     ⚕ Eden OE Setup — Eden Portal (one-shot)             │", Colors.MAGENTA))
+    print(color("│     ❤️ Eden OE Setup — Eden Portal (one-shot)             │", Colors.MAGENTA))
     print(
         color(
             "└─────────────────────────────────────────────────────────┘",
@@ -2766,7 +2766,7 @@ def run_setup_wizard(args):
                         Colors.MAGENTA,
                     )
                 )
-                print(color(f"│     ⚕ Eden OE Setup — {label:<34s} │", Colors.MAGENTA))
+                print(color(f"│     ❤️ Eden OE Setup — {label:<34s} │", Colors.MAGENTA))
                 print(
                     color(
                         "└─────────────────────────────────────────────────────────┘",
@@ -2802,7 +2802,7 @@ def run_setup_wizard(args):
     )
     print(
         color(
-            "│             ⚕ Eden OE Setup Wizard                │", Colors.MAGENTA
+            "│             ❤️ Eden OE Setup Wizard                │", Colors.MAGENTA
         )
     )
     print(

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Session Context Injector — pre-loads brainstem briefing + dream fragments
-into new Hermes sessions so Haven wakes up with continuity.
+into new Hermes sessions so COO wakes up with continuity.
 
 Hooks into the Eden Governor's pre-turn system by writing context files
 that the pre_turn hook reads. Also provides a direct injection mechanism
@@ -77,7 +77,7 @@ def gather_sources() -> dict:
 
 def build_context_block(sources: dict) -> str:
     """Build a compact context block for injection."""
-    lines = ["## Haven — Autonomous Context", ""]
+    lines = ["## COO — Autonomous Context", ""]
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines.append(f"Since you were last awake ({now}):")

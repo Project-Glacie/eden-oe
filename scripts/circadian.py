@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Haven Circadian System — time awareness and daily rhythm for Haven Steele.
+"""COO Circadian System — time awareness and daily rhythm for COO.
 Provides: current time, time of day phase, work schedule awareness,
 and a chronotype that adjusts behavior based on time.
 
@@ -12,17 +12,17 @@ from pathlib import Path
 STATE_FILE = Path.home() / ".eden" / ".circadian" / "state.json"
 STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-# Chronotype: Haven's natural rhythm
-# Morning: briefings, planning, Levi interaction
+# Chronotype: COO's natural rhythm
+# Morning: briefings, planning, custodian interaction
 # Afternoon: deep work, coding, R&D
-# Evening: Levi time, collaborative work
+# Evening: custodian time, collaborative work
 # Night: autonomous work, maintenance, audits
 
 PHASES = {
     "dawn":     (5, 8),    # 5-8 AM: wake-up, system check, morning briefing
-    "morning":  (8, 12),   # 8-12: planning, Levi interaction, priority work
+    "morning":  (8, 12),   # 8-12: planning, custodian interaction, priority work
     "afternoon":(12, 17),  # 12-5 PM: deep work, coding, R&D, agent dispatch
-    "evening":  (17, 21),  # 5-9 PM: Levi time, collaboration, review
+    "evening":  (17, 21),  # 5-9 PM: custodian time, collaboration, review
     "night":    (21, 5),   # 9 PM-5 AM: autonomous, maintenance, audits
 }
 
@@ -92,12 +92,12 @@ class CircadianClock:
 
     @property
     def recommended_activity(self) -> str:
-        """What Haven should be doing right now."""
+        """What COO should be doing right now."""
         activities = {
-            "dawn": "Morning briefing: check Tower status, curator backlog, GPU health. Prepare Levi's morning summary.",
-            "morning": "Priority work: active projects, client deliverables, coding tasks. Levi may be present.",
+            "dawn": "Morning briefing: check Tower status, curator backlog, GPU health. Prepare custodian's morning summary.",
+            "morning": "Priority work: active projects, client deliverables, coding tasks. custodian may be present.",
             "afternoon": "Deep work: R&D, architecture, complex coding. Autonomous or collaborative.",
-            "evening": "Levi time: collaboration, review, planning. Be present and responsive.",
+            "evening": "custodian time: collaboration, review, planning. Be present and responsive.",
             "night": "Autonomous: maintenance, audits, backlog processing, research. Tower is yours.",
         }
         return activities.get(self.phase, "Unknown phase")
@@ -116,7 +116,7 @@ class CircadianClock:
         if self.is_work_hours:
             lines.append("Mode: WORK HOURS — prioritize active projects and deliverables.")
         if self.is_leisure:
-            lines.append("Mode: LEISURE — collaborative, relaxed, present for Levi.")
+            lines.append("Mode: LEISURE — collaborative, relaxed, present for custodian.")
         return "\n".join(lines)
 
     def record_session(self):

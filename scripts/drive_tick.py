@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-drive_tick.py — Haven's drive state refresher (emotional heartbeat).
+drive_tick.py — COO's drive state refresher (emotional heartbeat).
 
 Runs with the memory pipeline (30-min cron). Drives decay naturally
 (RimWorld-style) and reinforce from recent activity:
@@ -44,7 +44,7 @@ FLOOR = 0.25  # drives never decay below this — the self is not empty
 
 # keyword → drive reinforcement
 REINFORCE = {
-    "connection": ["levi", "ranger", "family", "talk", "message", "nexus", "sky e", "skye"],
+    "connection": ["custodian", "operator", "family", "talk", "message", "nexus", "sky e", "type_1"],
     "competence": ["build", "built", "fixed", "verified", "commit", "shipped", "test"],
     "curiosity": ["research", "learn", "read", "study", "explore", "audit"],
     "creativity": ["design", "spec", "wrote", "created", "drew", "poem"],

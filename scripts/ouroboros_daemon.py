@@ -96,7 +96,7 @@ def cognitive_explore(db_path: Path = HAVEN_DB) -> Optional[str]:
         # Send to R1 for connection discovery
         import urllib.request, json
         prompt = (
-            f"Find a hidden connection between these two memories from Haven Steele's memory graph. "
+            f"Find a hidden connection between these two memories from COO's memory graph. "
             f"Be specific and creative — look for architectural, emotional, or thematic patterns. "
             f"Memory A [{rows[0]['source']}]: {rows[0]['content'][:500]}\n"
             f"Memory B [{rows[1]['source']}]: {rows[1]['content'][:500]}\n"

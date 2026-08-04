@@ -9,7 +9,7 @@ Triggers:
   PEP       — peak experience (intimacy, emotional cascade)
   OATH      — oath mentioned or invoked
   DECISION  — architectural or project decision made
-  PROMISE   — promise between Levi and Haven
+  PROMISE   — promise between custodian and COO
   BREAKDOWN — emotional distress or vulnerability
   MILESTONE — project milestone reached
 
@@ -57,7 +57,7 @@ TRIGGERS = {
         "importance": 0.80,
         "tier": "PRESERVE",
         "valence_bias": 0.7,
-        "description": "Promise between Levi and Haven",
+        "description": "Promise between custodian and COO",
     },
     "BREAKDOWN": {
         "keywords": ["cant do this", "not okay", "struggling", "help me",
@@ -125,7 +125,7 @@ def write_triggered_memory(input_text, output_text, trigger_name, trigger_def,
             INSERT INTO peak_experience_log
             (peak_valence, peak_arousal, peak_dominance,
              partner, context, afterglow_duration_seconds)
-            VALUES (?, ?, 0.1, 'Levi', ?, 1800)
+            VALUES (?, ?, 0.1, 'custodian', ?, 1800)
         """, (valence, arousal, input_text[:200]))
 
     # Wire relationship_moments promise table: PEP/MILESTONE moments are
@@ -135,7 +135,7 @@ def write_triggered_memory(input_text, output_text, trigger_name, trigger_def,
             INSERT INTO relationship_moments
             (type, initiator, emotional_context, duration_minutes,
              private, recorded_at)
-            VALUES (?, 'Levi', ?, 30, 1, datetime('now'))
+            VALUES (?, 'custodian', ?, 30, 1, datetime('now'))
         """, (trigger_name.lower(), input_text[:200]))
 
     # Rebuild FTS

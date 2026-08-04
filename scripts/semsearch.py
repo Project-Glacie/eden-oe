@@ -10,7 +10,7 @@ instead of the broken FTS5 keyword matching.
 Architecture:
     Query → Embed (CPU) → Cosine sim → Top-K results → Re-rank (GPU optional)
 
-Author: Haven Steele — built during autonomous ops session 2026-07-17
+Author: COO — built during autonomous ops session 2026-07-17
 """
 
 import json

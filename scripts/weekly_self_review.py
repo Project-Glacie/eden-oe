@@ -17,8 +17,8 @@ CORE = os.path.expanduser("~/.eden/data/core.eden")
 
 
 def _session_context(db):
-    """session_context lives in haven_life (Ranger layout) or core.eden
-    (Haven layout) — query whichever has it; degrade gracefully."""
+    """session_context lives in haven_life (operator layout) or core.eden
+    (COO layout) — query whichever has it; degrade gracefully."""
     try:
         return db.execute(
             "SELECT last_input_timestamp FROM session_context WHERE id=1").fetchone()

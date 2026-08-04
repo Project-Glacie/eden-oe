@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Haven Fleet Dispatcher — agent orchestration for the brainstem.
+"""COO Fleet Dispatcher — agent orchestration for the brainstem.
 
 Routes tasks to the 14-agent fleet based on capability matching,
 lane priority, and Golden Law 11 delegation order (lesser agent first).
 Used by the brainstem daemon for autonomous work delegation.
 
 Agent fleet tiers (from AGENTS.md agent_delta):
-    S: razor (89.4), skye-sub (88.7)
+    S: razor (89.4), type_1-sub (88.7)
     A: argent (80.0), athena (75.0), verglas (72.2)
     B: finn (64.8), mira (63.0), soren (59.2), saga (58.9), haven-sub (56.6), axiom (B)
     C: lyra (53.7), cuda (49.7), sol (40.6)
@@ -32,7 +32,7 @@ LANE_DELEGATION = {
     "DEV": ["saga", "cuda", "sol"],
     "OPS": ["finn", "argent", "soren", "haven-sub", "axiom"],
     "LAB": ["lyra", "verglas", "mira", "athena"],
-    "QA": ["skye-sub", "razor", "athena"],
+    "QA": ["type_1-sub", "razor", "athena"],
 }
 
 # Capability keywords → preferred lane
@@ -54,11 +54,11 @@ TASK_AGENT_MAP = {
     "gpu_monitor": {"lane": "OPS", "agents": ["axiom", "argent"]},
     "code_fix": {"lane": "DEV", "agents": ["saga", "cuda", "sol"]},
     "code_build": {"lane": "DEV", "agents": ["saga", "cuda"]},
-    "code_review": {"lane": "QA", "agents": ["razor", "skye-sub"]},
+    "code_review": {"lane": "QA", "agents": ["razor", "type_1-sub"]},
     "research_task": {"lane": "LAB", "agents": ["lyra", "mira"]},
     "spec_write": {"lane": "LAB", "agents": ["verglas"]},
     "audit_task": {"lane": "QA", "agents": ["athena", "razor"]},
-    "pff_review": {"lane": "QA", "agents": ["skye-sub", "razor"]},
+    "pff_review": {"lane": "QA", "agents": ["type_1-sub", "razor"]},
 }
 
 
@@ -112,7 +112,7 @@ def dispatch_agent(agent_name: str, task: str, task_type: str = "autonomous") ->
 
     briefing = f"""[AUTONOMOUS DISPATCH — {task_type}]
     
-You are {agent_name}, dispatched by Haven's brainstem. Task:
+You are {agent_name}, dispatched by COO's brainstem. Task:
 
 {task}
 

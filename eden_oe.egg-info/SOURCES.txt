@@ -407,6 +407,7 @@ eden_cli/web_dist/assets/RulesExpanded-Bold-DZA7s8Pa.woff2
 eden_cli/web_dist/assets/RulesExpanded-Regular-l8uVympt.woff2
 eden_cli/web_dist/assets/index-BhJSf3b-.css
 eden_cli/web_dist/assets/index-DkzByR8g.js
+eden_cli/web_dist/assets/index-DkzByR8g.js.bak
 eden_cli/web_dist/fonts/Collapse-Bold.woff2
 eden_cli/web_dist/fonts/Collapse-Regular.woff2
 eden_cli/web_dist/fonts/Mondwest-Regular.woff2

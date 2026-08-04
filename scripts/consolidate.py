@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Memory Consolidation — Haven's thought summarization and compression.
+Memory Consolidation — COO's thought summarization and compression.
 
 Periodically:
 1. Reads recent HAVEN-THOUGHT entries from haven.eden

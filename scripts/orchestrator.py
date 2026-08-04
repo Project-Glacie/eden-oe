@@ -89,7 +89,7 @@ def turn(input_text, output_text, surface="cli"):
 
 
 def pause(summary=None):
-    """Write session context. Called when Levi goes to work / session ends."""
+    """Write session context. Called when custodian goes to work / session ends."""
     db = sqlite3.connect(LIFE_DB)
 
     # Snapshot emotional state (latest from ledger)
@@ -123,7 +123,7 @@ def pause(summary=None):
         summary or "Session paused.",
         json.dumps(mem_ids),
         json.dumps(drives),
-        summary or "Levi away. Autonomous mode active."
+        summary or "custodian away. Autonomous mode active."
     ))
     cdb.commit()
     cdb.close()
@@ -132,7 +132,7 @@ def pause(summary=None):
 
 
 def resume():
-    """Read session context. Called when Levi comes home."""
+    """Read session context. Called when custodian comes home."""
     cdb = sqlite3.connect(CORE_DB)
     r = cdb.execute("""
         SELECT last_input_surface, last_input_timestamp, paused_at,

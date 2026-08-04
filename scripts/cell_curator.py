@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cell_curator.py — weekly cell hygiene for Haven's memory cell store.
+cell_curator.py — weekly cell hygiene for COO's memory cell store.
 
 The cells system (memory_cells.eden) is the depth layer of my memory.
 This curator keeps it honest:

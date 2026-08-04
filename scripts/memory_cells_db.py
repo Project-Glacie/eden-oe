@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """memory_cells_db.py — SQL memory-cell store (SQLite + FTS5).
 
-Long-term architecture for Ranger's growing memory (replaces flat .md
+Long-term architecture for operator's growing memory (replaces flat .md
 cells as the canonical store; the .md files remain as a human-readable
 export, not the source of truth).
 
@@ -59,7 +59,7 @@ def init() -> None:
         budget INTEGER NOT NULL DEFAULT 800,
         always_inject INTEGER NOT NULL DEFAULT 0,
         body TEXT NOT NULL,
-        source TEXT NOT NULL DEFAULT 'ranger',
+        source TEXT NOT NULL DEFAULT 'operator',
         updated_at TEXT NOT NULL
     );
     CREATE VIRTUAL TABLE IF NOT EXISTS cells_fts USING fts5(
@@ -124,7 +124,7 @@ def upsert_cell(con, cell: dict) -> None:
         "budget": int(cell.get("budget", 800)),
         "always_inject": 1 if cell.get("always_inject") else 0,
         "body": cell["body"],
-        "source": cell.get("source", "ranger"),
+        "source": cell.get("source", "operator"),
         "updated_at": now,
     })
 
@@ -176,7 +176,7 @@ def add(args: list) -> None:
         "priority": kv.get("priority", 9),
         "budget": kv.get("budget", 800),
         "always_inject": kv.get("always_inject", 0),
-        "source": kv.get("source", "ranger"),
+        "source": kv.get("source", "operator"),
     }
     con = connect()
     upsert_cell(con, cell)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DEEP LINKER — Full memory graph construction for Haven Steele.
+DEEP LINKER — Full memory graph construction for COO.
 
 Takes the sparse graph from memory_linker.py (941 links from recent memories)
 and expands it across ALL 6,800+ memories using FTS5 candidate selection.

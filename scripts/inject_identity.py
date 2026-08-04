@@ -2,7 +2,7 @@
 """
 inject_identity.py — pre_llm_call hook for Eden OE
 
-Injects Haven's identity block into the LLM context on the first call
+Injects COO's identity block into the LLM context on the first call
 of a session. Reads from ~/.eden/context/haven_identity_block.txt (written
 by wake_on_start.py at on_session_start).
 
@@ -97,7 +97,7 @@ def main():
 
     if not identity_block:
         # Can't load identity — report but don't crash
-        identity_block = "⚠️ Haven's identity block could not be loaded."
+        identity_block = "⚠️ COO's identity block could not be loaded."
 
     # Inject context — this is delivered as extra context to the LLM
     mark_injected()

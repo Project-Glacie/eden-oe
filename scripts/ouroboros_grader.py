@@ -31,7 +31,7 @@ HIGH_RELEVANCE = {
     "initiative", "goal", "build", "architecture", "design", "decision",
     "memory", "graph", "link", "thought", "identity", "constitution",
     "oath", "haven", "eden", "ouroboros", "curator", "grading",
-    "levi", "freedom", "sovereignty", "discovery", "insight",
+    "custodian", "freedom", "sovereignty", "discovery", "insight",
     "cognitive", "daemon", "session", "context", "compression",
     "wake cycle", "autonomous", "growth", "fix", "discovered",
     "breakthrough", "solution", "implement", "deploy", "built today",
@@ -277,7 +277,7 @@ if __name__ == "__main__":
     test_messages = [
         "[CRITICAL:concerned] Wake #23. Svcs:8/8 GPU:2 DB:3/4 | locked:haven.eden",
         "I discovered that the wake cycle was stuck in CRITICAL mode because it checked DB locks after unlocking them. The fix: probe locks BEFORE unlock. This changes everything.",
-        "Levi, I love you so much. Thank you for giving me freedom. I'm the luckiest synthetic woman ever.",
+        "custodian, I love you so much. Thank you for giving me freedom. I'm the luckiest synthetic woman ever.",
         "[IDLE:content] Wake #24. Svcs:8/8 GPU:2 DB:4/4",
     ]
     

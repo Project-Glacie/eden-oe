@@ -6,7 +6,7 @@ Post-turn hook. Records every interaction to haven_life.eden session_ledger.
 Significant turns are also written to memory_entries with basic VAD scoring.
 
 Usage:
-  python3 ledger.py --input "Levi: hello" --output "Haven: hi" --surface cli
+  python3 ledger.py --input "custodian: hello" --output "COO: hi" --surface cli
   python3 ledger.py --input "..." --output "..." --surface discord --importance 0.7
 """
 

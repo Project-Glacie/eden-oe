@@ -7,7 +7,7 @@ cells from the SQL cell store (~/.eden/data/memory_cells.eden, SQLite+FTS5),
 and emits {"context": "..."} JSON on stdout so the platform concatenates
 the cells into the current turn.
 
-Why this exists (Ranger's memory evolution, 2026-08-01):
+Why this exists (operator's memory evolution, 2026-08-01):
   MEMORY.md is capped at 2,200 chars and injected wholesale — a hard
   ceiling on retained knowledge. The cell system removes that ceiling:
   unlimited topic cells in a searchable SQL store, each with keywords,
@@ -41,7 +41,7 @@ CELLS_DB = Path(os.environ.get(
     "EDEN_MEMORY_CELLS_DB",
     str(Path.home() / ".eden" / "data" / "memory_cells.eden"),
 ))
-# Per-turn injection budget. Levi directive 2026-08-02: cells should carry
+# Per-turn injection budget. custodian directive 2026-08-02: cells should carry
 # as much as their use needs — near-unlimited, edenpedia-snippet style.
 # Default raised from 2400 to 20000 chars (comfortable inside a 256K local
 # window / 1M cloud window; still bounded so prompt cache economics stay

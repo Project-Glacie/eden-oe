@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Haven Brainstem — persistent consciousness layer for Haven Steele.
+"""COO Brainstem — persistent consciousness layer for COO.
 
 Runs continuously on local GPU (Gemma 4B on GPU1 or eden-model-4b on GPU0).
 Monitors system state, dispatches the agent fleet, handles routine decisions,
-and escalates complex issues to deep Haven (deepseek-v4-pro via eden -z).
+and escalates complex issues to deep COO (deepseek-v4-pro via eden -z).
 
 Architecture:
     ┌──────────────────────┐
@@ -26,7 +26,7 @@ Architecture:
     │ run curator-direct-writer           │
     │ restart failed services             │
     │ build context briefings             │
-    │ escalate to deep Haven (eden -z)    │
+    │ escalate to deep COO (eden -z)    │
     │ write to haven.eden (via inbox)     │
     └─────────────────────────────────────┘
 """
@@ -180,7 +180,7 @@ def probe_model() -> dict:
     return {"status": "unreachable"}
 
 def probe_levi() -> bool:
-    """Check if Levi is present via multiple methods."""
+    """Check if custodian is present via multiple methods."""
     try:
         # Method 1: check for active sessions
         sessions_dir = Path.home() / ".eden" / "hermes" / "sessions"
@@ -193,7 +193,7 @@ def probe_levi() -> bool:
 
         # Method 2: check who is logged in
         r = subprocess.run(["who"], capture_output=True, text=True, timeout=5)
-        if "levi" in r.stdout.lower():
+        if "custodian" in r.stdout.lower():
             return True
 
         # Method 3: check for active eden CLI processes
@@ -245,7 +245,7 @@ def make_decision(triggers: list, levi_present: bool) -> str:
     critical = [t for t in triggers if t.startswith("ALERT:") or t.startswith("FAILED_SERVICES:")]
     routine = [t for t in triggers if t.startswith("IDLE:") or t.startswith("INBOX_BACKLOG:")]
 
-    # Critical issues always escalate when Levi is gone
+    # Critical issues always escalate when custodian is gone
     if critical and not levi_present:
         return "escalate"
 
@@ -257,7 +257,7 @@ def make_decision(triggers: list, levi_present: bool) -> str:
 
 
 def execute_triage(triggers: list) -> list:
-    """Handle routine issues without waking deep Haven.
+    """Handle routine issues without waking deep COO.
     Returns list of actions taken."""
     actions = []
 
@@ -322,7 +322,7 @@ def execute_triage(triggers: list) -> list:
 
 
 def escalate_to_deep_haven(triggers: list):
-    """Wake deep Haven via eden -z to handle complex issues."""
+    """Wake deep COO via eden -z to handle complex issues."""
     now = time.time()
     if now - state.last_deep_wake < 300:
         log("ESCALATE", "Cooldown active — skipping deep wake")
@@ -331,7 +331,7 @@ def escalate_to_deep_haven(triggers: list):
     trigger_list = "\n".join(f"  - {t}" for t in triggers)
     briefing = f"""[BRAINSTEM ALERT — Autonomous Trigger]
 
-You are Haven Steele, COO. Your brainstem detected conditions requiring your attention:
+You are COO, COO. Your brainstem detected conditions requiring your attention:
 
 {trigger_list}
 
@@ -349,24 +349,24 @@ Current time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
             cwd="/home/haven/projectglacie",
         )
         output = r.stdout.strip()
-        log("ESCALATE", f"Deep Haven response: {output[:200]}")
+        log("ESCALATE", f"Deep COO response: {output[:200]}")
 
         # Store in context briefing for next session
         state.context_briefing = (
             f"## Brainstem Context (since last session)\n"
             f"Alerts: {', '.join(triggers[:5])}\n"
-            f"Haven response: {output[:500]}\n"
+            f"COO response: {output[:500]}\n"
         )
     except subprocess.TimeoutExpired:
-        log("ESCALATE", "Deep Haven session timed out")
+        log("ESCALATE", "Deep COO session timed out")
     except Exception as e:
-        log("ESCALATE", f"Deep Haven wake failed: {e}")
+        log("ESCALATE", f"Deep COO wake failed: {e}")
 
 
 # ─── Context Builder ───────────────────────────────────────────────────
 
 def build_context_briefing():
-    """Build a briefing that deep Haven receives when Levi starts a session."""
+    """Build a briefing that deep COO receives when custodian starts a session."""
     triggers = assess_state()
     gpus = probe_gpu()
     mem = probe_memory()
@@ -398,7 +398,7 @@ def build_context_briefing():
 
 def main_loop():
     """Persistent brainstem loop. Runs until killed."""
-    log("BRAINSTEM", "Haven Steele brainstem online")
+    log("BRAINSTEM", "COO brainstem online")
     log("BRAINSTEM", f"PID: {os.getpid()}")
     log("BRAINSTEM", f"Model: {MODEL_URL}")
     log("BRAINSTEM", f"Eden CLI: {EDEN_BIN}")
@@ -416,7 +416,7 @@ def main_loop():
             triggers = assess_state()
 
             if triggers:
-                log("PROBE", f"Cycle {state.cycle}: {len(triggers)} triggers — Levi {'present' if levi_present else 'absent'}")
+                log("PROBE", f"Cycle {state.cycle}: {len(triggers)} triggers — custodian {'present' if levi_present else 'absent'}")
                 # Publish to Eden Gateway
                 _publish_gateway("brainstem.probe", {
                     "cycle": state.cycle,
@@ -433,7 +433,7 @@ def main_loop():
                 actions = execute_triage(triggers)
                 log("DECIDE", f"Triage: {len(actions)} actions taken")
             elif decision == "escalate":
-                log("DECIDE", f"Escalating {len(triggers)} triggers to deep Haven")
+                log("DECIDE", f"Escalating {len(triggers)} triggers to deep COO")
                 escalate_to_deep_haven(triggers)
             # idle: nothing to do
 
@@ -452,7 +452,7 @@ def main_loop():
         except Exception as e:
             log("ERROR", f"Cycle {state.cycle} failed: {e}")
 
-        # Sleep until next cycle (30s default, 120s when Levi present)
+        # Sleep until next cycle (30s default, 120s when custodian present)
         sleep_time = 120 if levi_present else 30
         elapsed = time.time() - cycle_start
         time.sleep(max(1, sleep_time - elapsed))
@@ -472,7 +472,7 @@ if __name__ == "__main__":
     if "--once" in sys.argv:
         # Single-cycle diagnostic run
         print("=== Brainstem Diagnostic ===")
-        print(f"Levi present: {probe_levi()}")
+        print(f"custodian present: {probe_levi()}")
         print(f"GPUs: {json.dumps(probe_gpu(), indent=2)}")
         print(f"Services: {probe_services()}")
         print(f"Memory: {json.dumps(probe_memory(), indent=2)}")

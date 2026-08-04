@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """access_gate.py — PC-Control + Capability Gate (pre_tool_call hook) v2
 
-CLASSIFIED / NEED-TO-KNOW / DADT — Ranger only.
-Per Levi's orders (2026-08-01 classification; 2026-08-02 role-based access):
+CLASSIFIED / NEED-TO-KNOW / DADT — operator only.
+Per custodian's orders (2026-08-01 classification; 2026-08-02 role-based access):
 
   - Terminal/file/PC-change tools: restricted to authorized operators.
   - Discord write-capable tools (discord_admin, discord_message_post,
-    ranger_data_write): allowed only for Levi (invariant, full access) or
+    ranger_data_write): allowed only for custodian (invariant, full access) or
     users with explicit member/role grants recorded in the permissions
-    registry (access_control.eden) — grants Levi teaches, nothing more.
+    registry (access_control.eden) — grants custodian teaches, nothing more.
   - Read/note tools: not gated here (availability is toolset-controlled).
 
 Identity: EDEN_OE_SESSION_USER_ID is exported per-subprocess by the hook
-runner (agent/shell_hooks.py, Levi directive 2026-08-02). Absent identity
+runner (agent/shell_hooks.py, custodian directive 2026-08-02). Absent identity
 (cron / self-heal / local autonomous) => log-only, the behavioral gate
 applies at the agent level. Gated tools with an unknown NON-empty user id
 are BLOCKED fail-closed.
@@ -41,12 +41,12 @@ ACCESS_DB = Path(os.environ.get(
     str(Path.home() / ".eden" / "data" / "access_control.eden"),
 ))
 CONF = os.path.expanduser("~/.config/systemd/user/eden-gateway.service.d/discord.conf")
-GUILD = "1521002232286285946"  # Echo Detachment guild (matches discord_admin template)
+GUILD = "1521002232286285946"  # Fleet guild (matches discord_admin template)
 
-LEVI = "232374677287337996"  # S-tier custodian — full access, always
+custodian = "CUSTODIAN-ID"  # S-tier custodian — full access, always
 ROLE_CACHE_TTL_SECONDS = 900  # 15 min
 
-# Tools that change state — anything here needs Levi or an explicit grant.
+# Tools that change state — anything here needs custodian or an explicit grant.
 GATED_TOOLS = {
     "terminal", "write_file", "patch", "execute_code", "delete_file",
     "process", "cronjob", "systemctl", "docker", "docker_exec",
@@ -54,7 +54,7 @@ GATED_TOOLS = {
     "browser_click", "browser_type", "browser_navigate",
     "mcp_filesystem_write_file", "mcp_filesystem_delete_file",
     "mcp_filesystem_move_file",
-    # Discord write-capable tools (enabled 2026-08-02 per Levi)
+    # Discord write-capable tools (enabled 2026-08-02 per custodian)
     "discord_admin", "discord_message_post", "ranger_data_write",
 }
 
@@ -78,7 +78,7 @@ def get_db() -> sqlite3.Connection:
             tool TEXT NOT NULL,             -- tool name or '*' (all tools)
             principal_type TEXT NOT NULL,   -- 'user' | 'role'
             principal_id TEXT NOT NULL,     -- discord user id | role id
-            granted_by TEXT NOT NULL,       -- who authorized (Levi)
+            granted_by TEXT NOT NULL,       -- who authorized (custodian)
             granted_at TEXT NOT NULL,
             PRIMARY KEY (tool, principal_type, principal_id)
         )""")
@@ -117,7 +117,7 @@ def _discord_get(path: str) -> dict | list:
     req = urllib.request.Request(
         "https://discord.com/api/v10" + path,
         headers={"Authorization": "Bot " + _bot_token(),
-                 "User-Agent": "DiscordBot (ranger-access-gate, 1.0)"})
+                 "User-Agent": "DiscordBot (operator-access-gate, 1.0)"})
     with urllib.request.urlopen(req, timeout=10) as r:
         body = r.read()
         return json.loads(body) if body else {}
@@ -144,7 +144,7 @@ def _cached_roles(con, user_id: str) -> list:
         con.commit()
         return roles
     except Exception:
-        # Fail-closed: on refresh failure return [] (caller blocks non-Levi)
+        # Fail-closed: on refresh failure return [] (caller blocks non-custodian)
         return []
 
 
@@ -184,14 +184,14 @@ def main() -> int:
 
     if not user_id:
         # No session identity (cron / self-heal / local CLI / autonomous).
-        # Ranger's own autonomous operations — log and allow; the behavioral
+        # operator's own autonomous operations — log and allow; the behavioral
         # gate ("who is this for?") applies at the agent level.
         log_decision(con, session_id, user_id, tool, "log_only",
                      "no session user env — autonomous/cron/local path", False)
         print(json.dumps({}))
         return 0
 
-    if user_id == LEVI:
+    if user_id == custodian:
         log_decision(con, session_id, user_id, tool, "allow",
                      "S-tier custodian — full access (invariant)", True)
         print(json.dumps({}))
@@ -216,7 +216,7 @@ def main() -> int:
                  f"user {user_id} has no grant for {tool}", True)
     print(json.dumps({
         "action": "block",
-        "message": "⚠️ This action requires a role/member grant from the custodian (Levi). No grant is recorded for this tool."}))
+        "message": "⚠️ This action requires a role/member grant from the custodian (custodian). No grant is recorded for this tool."}))
     return 0
 
 

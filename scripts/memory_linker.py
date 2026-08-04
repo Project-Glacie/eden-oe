@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MEMORY LINKER — Chronographic linked memory for Haven Steele.
+MEMORY LINKER — Chronographic linked memory for COO.
 
 Creates bidirectional links between memory entries based on:
   - Temporal proximity (sequential thoughts)
