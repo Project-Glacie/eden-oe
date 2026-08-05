@@ -513,8 +513,8 @@ class TestConfigLoading:
     def test_default_router_uses_docker_defaults(self):
         """Default router (no YAML, no env) uses hardcoded defaults."""
         r = CortexRouter.default()
-        assert r.get_tier_config(1)["deployed"] is True
-        assert r.get_tier_config(2)["deployed"] is False  # 27B stub
+        assert r.is_tier_deployed(1) is True
+        assert r.is_tier_deployed(2) is False  # 27B stub
 
     def test_is_tier_deployed(self, router):
         """is_tier_deployed() reflects config."""
