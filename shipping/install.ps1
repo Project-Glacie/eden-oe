@@ -6,7 +6,7 @@
 
 $ErrorActionPreference = "Stop"
 $ROOT = "C:\eden-oe"
-$BUNDLE = Join-Path $PSScriptRoot "eden-agent.bundle"
+$REPO = "https://github.com/Project-Glacie/eden-oe.git"
 $BOOT = Join-Path $PSScriptRoot "bootstrap.py"
 
 # --- Run a native command; on failure, print its real output ------------
@@ -174,8 +174,7 @@ if (-not $py) {
     Write-Error "Supported Python (3.11-3.13) not found after auto-install.`nInstall Python 3.12 from https://www.python.org/downloads/ (check 'Add python.exe to PATH' and 'py launcher'), close this window, reopen, and re-run."
 }
 Write-Host "  OK: $($py.cmd) - $($py.version)"
-if (-not (Test-Path $BUNDLE)) { Write-Error "eden-agent.bundle missing beside installer" }
-Write-Host "  OK: bundle present"
+Write-Host "  OK: cloning from $REPO"
 
 # --- 1. Runtime (clone + venv + install) --------------------------------
 Write-Host "`n[1] Installing runtime..." -ForegroundColor Yellow
@@ -189,7 +188,7 @@ if (Test-Path (Join-Path $ROOT "eden-oe")) {
     }
 }
 if (-not (Test-Path (Join-Path $ROOT "eden-oe\.git"))) {
-    $code = Run-Native { git clone --quiet $BUNDLE eden-oe }
+    $code = Run-Native { git clone --quiet $REPO eden-oe }
     if ($code -ne 0) { Write-Error "git clone failed (exit $code) - see output above" }
 }
 Set-Location (Join-Path $ROOT "eden-oe")

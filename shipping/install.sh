@@ -3,7 +3,7 @@
 # Everything is done by bootstrap.py (cross-platform engine).
 set -uo pipefail
 ROOT="${HOME}/eden-oe"
-BUNDLE="$(dirname "$0")/eden-agent.bundle"
+REPO="https://github.com/Project-Glacie/eden-oe.git"
 BOOT="$(dirname "$0")/bootstrap.py"
 
 echo "=== Eden OE Synth Installer (Linux) ==="
@@ -19,14 +19,13 @@ if [ -f "$(dirname "$0")/check-deps.py" ]; then
 else
     python3 --version >/dev/null 2>&1 || { echo "ERROR: python3 missing"; exit 1; }
 fi
-[ -f "$BUNDLE" ] || { echo "ERROR: eden-agent.bundle missing beside installer"; exit 1; }
-echo "  OK: python3 + bundle present"
+echo "  OK: python3 present — cloning from $REPO"
 
 # ── 1. Runtime ───────────────────────────────────────────────────────────
 echo; echo "[1] Installing runtime..."
 mkdir -p "$ROOT"
 cd "$ROOT"
-[ -d eden-oe/.git ] || git clone "$BUNDLE" eden-oe || { echo "ERROR: clone failed"; exit 1; }
+[ -d eden-oe/.git ] || git clone "$REPO" eden-oe || { echo "ERROR: clone failed"; exit 1; }
 cd eden-oe
 [ -d .venv ] || python3 -m venv .venv
 .venv/bin/pip install -q -e . 2>/dev/null || { echo "ERROR: pip install failed"; exit 1; }
