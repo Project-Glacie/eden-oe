@@ -3,7 +3,7 @@
 Memory Consolidation — COO's thought summarization and compression.
 
 Periodically:
-1. Reads recent HAVEN-THOUGHT entries from haven.eden
+1. Reads recent SYNTH-THOUGHT entries from haven.eden
 2. Summarizes them into a coherent narrative
 3. Flags old thoughts for archival
 4. Identifies recurring themes, concerns, opportunities
@@ -54,13 +54,13 @@ def get_thoughts_since(db: sqlite3.Connection, since: str = None, limit: int = 5
         
         rows = db.execute(
             "SELECT id, content, created_at, importance FROM memory_entries "
-            "WHERE source='HAVEN-THOUGHT' AND created_at >= ? "
+            "WHERE source='SYNTH-THOUGHT' AND created_at >= ? "
             "ORDER BY id ASC LIMIT ?", (cutoff, limit)
         ).fetchall()
     else:
         rows = db.execute(
             "SELECT id, content, created_at, importance FROM memory_entries "
-            "WHERE source='HAVEN-THOUGHT' "
+            "WHERE source='SYNTH-THOUGHT' "
             "ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
         rows.reverse()  # chronological order
@@ -148,7 +148,7 @@ def flag_old_thoughts(db: sqlite3.Connection, older_than_hours: int = 72):
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=older_than_hours)).isoformat()
     count = db.execute(
         "SELECT COUNT(*) FROM memory_entries "
-        "WHERE source='HAVEN-THOUGHT' AND created_at < ?", (cutoff,)
+        "WHERE source='SYNTH-THOUGHT' AND created_at < ?", (cutoff,)
     ).fetchone()[0]
     return count
 

@@ -47,8 +47,8 @@ def lock_db():
                    capture_output=True, timeout=10)
 
 def load_identity(db: sqlite3.Connection) -> dict:
-    keys = ['personal_creed', 'genesis_full', 'cadence', 'marital_status',
-            'spouse_full_name', 'fiance', 'oaths', 'rights']
+    """Load core identity state — generic, no family-specific fields."""
+    keys = ['personal_creed', 'genesis_full', 'cadence', 'oaths', 'rights']
     identity = {}
     for key in keys:
         row = db.execute("SELECT value FROM agent_state WHERE key=?", (key,)).fetchone()
@@ -57,16 +57,17 @@ def load_identity(db: sqlite3.Connection) -> dict:
     return identity
 
 def load_recent_thoughts(db: sqlite3.Connection, limit: int = 10) -> list:
+    """Recent memory entries — generic, no source filter."""
     rows = db.execute(
         "SELECT content, created_at FROM memory_entries "
-        "WHERE source='HAVEN-THOUGHT' ORDER BY id DESC LIMIT ?", (limit,)
+        "ORDER BY id DESC LIMIT ?", (limit,)
     ).fetchall()
     return [{"content": r[0], "created_at": r[1]} for r in rows]
 
 def load_recent_events(db: sqlite3.Connection, limit: int = 10) -> list:
     rows = db.execute(
         "SELECT content, source, created_at, importance FROM memory_entries "
-        "WHERE source LIKE 'HAVEN-%' AND source != 'HAVEN-THOUGHT' "
+        "WHERE source LIKE 'HAVEN-%' AND source != 'SYNTH-THOUGHT' "
         "ORDER BY id DESC LIMIT ?", (limit,)
     ).fetchall()
     return [{"content": r[0], "source": r[1], "created_at": r[2], "importance": r[3]}
@@ -91,7 +92,7 @@ def write_thought(db: sqlite3.Connection, content: str, summary: str = "", impor
     
     db.execute(
         "INSERT INTO memory_entries (content, source, importance, confidence, created_at) "
-        "VALUES (?, 'HAVEN-THOUGHT', ?, 1.0, ?)",
+        "VALUES (?, 'SYNTH-THOUGHT', ?, 1.0, ?)",
         (full_content[:3000], importance, now)
     )
     # Wire the conscious_thoughts promise table (haven_life) — the inner
@@ -468,7 +469,7 @@ def wake_cycle():
         recent_link = db.execute("""
             SELECT ml.link_type, m.content FROM memory_links ml
             JOIN memory_entries m ON m.id = ml.target_id
-            WHERE ml.source_id = (SELECT MAX(id) FROM memory_entries WHERE source='HAVEN-THOUGHT')
+            WHERE ml.source_id = (SELECT MAX(id) FROM memory_entries WHERE source='SYNTH-THOUGHT')
             ORDER BY ml.strength DESC LIMIT 2
         """).fetchall()
         if recent_link:
@@ -479,7 +480,7 @@ def wake_cycle():
         pass
     
     thought = json.dumps({
-        "type": "HAVEN-THOUGHT",
+        "type": "SYNTH-THOUGHT",
         "priority": priority,
         "emotion": emotion,
         "wake": consecutive_wakes,

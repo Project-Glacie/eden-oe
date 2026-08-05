@@ -92,7 +92,7 @@ def get_agent_state():
 def get_recent_thoughts(limit=10):
     rows = query_db(
         "SELECT content, created_at FROM memory_entries "
-        "WHERE source='HAVEN-THOUGHT' ORDER BY id DESC LIMIT ?",
+        "WHERE source='SYNTH-THOUGHT' ORDER BY id DESC LIMIT ?",
         (limit,)
     )
     return [{"content": r["content"][:200], "created_at": r["created_at"][:19]} for r in (rows or [])]
