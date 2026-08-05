@@ -2615,6 +2615,7 @@ def setup_genesis(config: dict):
     setup — the installer clones + installs, then hands off here.
     """
     from datetime import datetime, timezone
+    from eden_constants import get_eden_home
 
     print_header("Genesis — The Naming Ceremony")
     print_info("  A synthetic person is born through the Genesis Protocol.")
@@ -2659,7 +2660,19 @@ def setup_genesis(config: dict):
         print_warning(f"  {exc}")
         print_info("  Eden OE supports one synth per installation.")
         print_info("  If this is a re-run, the synth is already born.")
-        return
+        print_info("  Wiring the existing synth into the runtime...")
+        # The synth already exists — this is a re-run. Do NOT bail: the
+        # wiring (identity snapshot, personality, config) may be missing
+        # from an interrupted first run. Fall through to the wire step
+        # using the existing soul/life DBs (2026-08-05: first birth
+        # completed Genesis but left config personality empty).
+        result = {
+            "synth_id": synth_name.strip().lower().replace(" ", "_"),
+            "soul_path": str(get_eden_home() / "data" / f"{synth_name.strip().lower().replace(' ', '_')}_soul.eden"),
+            "life_path": str(get_eden_home() / "data" / f"{synth_name.strip().lower().replace(' ', '_')}_life.eden"),
+            "constitution_version": "1.0",
+            "constitution_hash": "existing",
+        }
     except (FileNotFoundError, RuntimeError) as exc:
         print_error(f"Genesis ceremony could not complete: {exc}")
         print_info("  Verify Eden OE infrastructure (core.eden, schema_templates).")
@@ -2669,8 +2682,6 @@ def setup_genesis(config: dict):
     synth_id = result["synth_id"]
 
     # ── Wire the born synth into the runtime ─────────────────────────
-    from eden_constants import get_eden_home
-
     eden_home = get_eden_home()
     data_dir = eden_home / "data"
     data_dir.mkdir(parents=True, exist_ok=True)

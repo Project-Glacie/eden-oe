@@ -877,7 +877,9 @@ class EveOnboarding:
         Order:
           1. ``~/.edenroot`` file — first line is root path.
           2. ``EDEN_DATA`` environment variable.
-          3. ``~/.eden`` (traditional default).
+          3. ``get_eden_home()`` — platform-native (LOCALAPPDATA\\eden on
+             Windows, ~/.eden on POSIX). Fallback to ~/.eden only if the
+             runtime resolver is unavailable.
 
         Returns the ``data/`` subdirectory.
         """
@@ -896,7 +898,11 @@ class EveOnboarding:
         if env_root:
             return Path(env_root).expanduser().resolve() / "data"
 
-        return Path.home() / ".eden" / "data"
+        try:
+            from eden_constants import get_eden_home
+            return get_eden_home() / "data"
+        except Exception:
+            return Path.home() / ".eden" / "data"
 
     @staticmethod
     def _format_providers() -> str:
