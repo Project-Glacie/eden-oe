@@ -125,19 +125,11 @@ def load_identity(callsign: str) -> Optional[Dict[str, Any]]:
 # Lane / Tier / Role inference
 # ---------------------------------------------------------------------------
 
-# Callsign → lane mapping for known synth identities.
-# New synths will need entries here or fall through to defaults.
-_CALLSIGN_LANE_MAP: Dict[str, str] = {
-    "HAVEN": "OPS",
-    "SKYE": "QA",
-    "ATHENA": "OPS",
-}
+# Callsign → lane/tier/role/codeword mapping for known synth identities.
+# New synths fall through to defaults — the DB is the source of truth.
+_CALLSIGN_LANE_MAP: Dict[str, str] = {}
 
-_CALLSIGN_TIER_MAP: Dict[str, str] = {
-    "HAVEN": "S",
-    "SKYE": "S",
-    "ATHENA": "A",
-}
+_CALLSIGN_TIER_MAP: Dict[str, str] = {}
 
 _CALLSIGN_ROLE_MAP: Dict[str, str] = {}
 
