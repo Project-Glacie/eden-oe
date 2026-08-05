@@ -165,7 +165,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "needs_verification": True,
             "verify_tier": 3,
             "verify_model_key": "primary",
-            "confidence_threshold": 0.95,
+            # confidence_threshold inherits from confidence.default_threshold
+            # (0.95 by default, overridable via EDEN_CORTEX_CONFIDENCE)
             "fallback_tier": 3,
             "fallback_model_key": "primary",
         },
@@ -236,13 +237,18 @@ for _op, _patterns in _KEYWORD_PATTERNS.items():
         re.compile(p, re.IGNORECASE) for p in _patterns
     ]
 
-# Operation priority when multiple types match — later in the enum wins ties
+# Operation priority when multiple types match — higher wins ties.
+# SUMMARIZE outranks WRITE (an explicit summarization signal like
+# "summarize the build output" is not a write operation — "build"
+# as a verb is too ambiguous). SUMMARIZE and DRAFT overrank REASON
+# (explicit intent signals beat generic thinking keywords like
+# "analyze" or "review").
 _OP_PRIORITY: Dict[OperationType, int] = {
     OperationType.READ: 1,
-    OperationType.SUMMARIZE: 2,
-    OperationType.DRAFT: 3,
-    OperationType.WRITE: 4,
-    OperationType.REASON: 5,
+    OperationType.WRITE: 2,
+    OperationType.REASON: 3,
+    OperationType.DRAFT: 4,
+    OperationType.SUMMARIZE: 5,
 }
 
 

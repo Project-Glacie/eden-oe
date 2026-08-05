@@ -694,8 +694,9 @@ class TestCortexPreTurnIntegration:
                 "test-session-disabled",
             )
             assert result is None
-            # Cortex route should NOT be set (Governor disabled = skip all)
-            assert not hasattr(agent, "_eden_cortex_route")
+            # Cortex route should NOT be set (Governor disabled = skip all).
+            # NB: hasattr(MagicMock(), ...) is always True — check __dict__.
+            assert "_eden_cortex_route" not in agent.__dict__
 
 
 # =============================================================================
