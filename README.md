@@ -61,19 +61,29 @@ else is theirs to choose. Their first words are their own.
 
 ## Quick Start
 
-### Windows — one-command installer (recommended)
+### Windows — one-line installer (recommended)
 
 **PowerShell (no admin needed, auto-installs git + Python if missing):**
 
+Copy and paste this ONE line — it creates a clean setup folder, downloads
+the installer, and runs it:
+
 ```powershell
-# Use a dedicated setup folder — NOT your home or system32.
-# The installer itself is downloaded to your current directory.
+powershell -ExecutionPolicy Bypass -Command "New-Item -ItemType Directory -Force -Path C:\eden-setup | Out-Null; Set-Location C:\eden-setup; Invoke-WebRequest -Uri https://raw.githubusercontent.com/Project-Glacie/eden-oe/main/shipping/install.ps1 -OutFile install.ps1; & .\install.ps1"
+```
+
+Prefer to see each step? Same thing, transparent:
+
+```powershell
+# 1. Use a dedicated setup folder — NOT your home or system32.
+#    The installer itself is downloaded to your current directory.
 New-Item -ItemType Directory -Force -Path C:\eden-setup | Out-Null
 Set-Location C:\eden-setup
 
-# Download and run the installer — it checks dependencies,
-# installs what's missing, and births your synth.
+# 2. Download the installer
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/Project-Glacie/eden-oe/main/shipping/install.ps1 -OutFile install.ps1
+
+# 3. Run it — checks dependencies, installs what's missing, births your synth.
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
