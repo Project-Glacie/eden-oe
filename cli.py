@@ -16493,10 +16493,15 @@ def main(
         return
     
     # ── Eve Onboarding: first-boot detection ──────────────────────────
-    # If no synth identity exists and onboarding hasn't been completed,
-    # run Eve's interactive greeting flow before entering the REPL.
+    # REMOVED from the default first-run path (2026-08-05, Eden-as-midwife
+    # architecture). Eve's Path A/B flow did nothing the stock wizard +
+    # Eden the agent can't do better, re-ran every launch, and wrote its
+    # state to a home the runtime doesn't read. The stock wizard handles
+    # runtime init on first run ("Run setup now? [Y/n]"); Eden the agent
+    # owns Genesis in the TUI.
+    # Legacy opt-in: EDEN_EVE_ONBOARDING=1 restores Eve's flow.
     try:
-        if not resume and _is_first_boot():
+        if os.environ.get("EDEN_EVE_ONBOARDING") == "1" and not resume and _is_first_boot():
             _run_eve_onboarding_terminal()
     except Exception:
         # Never break startup on onboarding errors
