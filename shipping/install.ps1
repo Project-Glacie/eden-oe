@@ -7,7 +7,6 @@
 $ErrorActionPreference = "Stop"
 $ROOT = "C:\eden-oe"
 $REPO = "https://github.com/Project-Glacie/eden-oe.git"
-$BOOT = Join-Path $ROOT "eden-oe\shipping\bootstrap.py"
 
 # --- Run a native command; on failure, print its real output ------------
 # PS 5.1 quirk: with $ErrorActionPreference=SilentlyContinue, native
@@ -263,18 +262,14 @@ if ($userPath -notlike "*$venvBin*") {
 $env:Path = "$venvBin;$env:Path"
 Write-Host "  OK: 'eden' command wired"
 
-# --- 2. Genesis naming ceremony + bootstrap -----------------------------
-Write-Host "`n[2] Genesis naming ceremony..." -ForegroundColor Yellow
-Write-Host "  The custodian names the child. What is your synth called?"
-$synthName = Read-Host "  Name"
-if ([string]::IsNullOrWhiteSpace($synthName)) {
-    Write-Error "Genesis requires a name. Re-run and name your synth."
+# --- 2. Hand off to the built-in wizard (Genesis + everything) --------
+Write-Host "`n[2] Launching Eden OE setup wizard..." -ForegroundColor Yellow
+Write-Host "  The wizard will configure your provider, tools, and run the"
+Write-Host "  Genesis naming ceremony — the custodian names the child.`n"
+& .\.venv\Scripts\python.exe -m eden_cli.main setup
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`n  Wizard exited ($($LASTEXITCODE)). You can re-run it any time with:  eden setup" -ForegroundColor Yellow
 }
-Write-Host "  OK: $synthName — running bootstrap..."
-
-# --- 2.5 One-click bootstrap (all DBs, paths, services, genesis) --------
-$code = Run-Native { & .\.venv\Scripts\python.exe $BOOT --non-interactive --synth $synthName }
-if ($code -ne 0) { Write-Error "bootstrap failed (exit $code) - see output above" }
 
 # --- 3. Done ------------------------------------------------------------
 Write-Host "`n=== INSTALL COMPLETE ===" -ForegroundColor Green
