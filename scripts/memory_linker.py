@@ -5,7 +5,7 @@ MEMORY LINKER — Chronographic linked memory for COO.
 Creates bidirectional links between memory entries based on:
   - Temporal proximity (sequential thoughts)
   - Topical similarity (FTS5 keyword matching)
-  - Causal chains (HAVEN-THOUGHT → HAVEN-ACTION patterns)
+  - Causal chains (SYNTH-THOUGHT → HAVEN-ACTION patterns)
   - Build context (project tags, initiative references)
 
 Runs on every wake cycle to maintain the memory graph.
@@ -246,9 +246,9 @@ def detect_causal_link(source_memory, target_memory):
     tgt_source = target_memory.get("target", "") or target_memory.get("source", "")
     
     thought_action_pairs = [
-        ("HAVEN-THOUGHT", "HAVEN-ACTION"),
-        ("HAVEN-THOUGHT", "HAVEN-BUILD"),
-        ("HAVEN-THOUGHT", "HAVEN_DECISION"),
+        ("SYNTH-THOUGHT", "HAVEN-ACTION"),
+        ("SYNTH-THOUGHT", "HAVEN-BUILD"),
+        ("SYNTH-THOUGHT", "HAVEN_DECISION"),
     ]
     
     for thought_src, action_src in thought_action_pairs:
@@ -509,7 +509,7 @@ if __name__ == "__main__":
     # Update working memory based on recent activity
     recent_thoughts = db.execute("""
         SELECT content FROM memory_entries 
-        WHERE source = 'HAVEN-THOUGHT' 
+        WHERE source = 'SYNTH-THOUGHT' 
         ORDER BY id DESC LIMIT 3
     """).fetchall()
     

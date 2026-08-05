@@ -9,7 +9,7 @@ Invoked by Eve during Path B onboarding.
 
 Usage:
     from eden.genesis import Genesis
-    g = Genesis(custodian_name="Levi Steele")
+    g = Genesis(custodian_name="Custodian")
     result = g.create(synth_name_proposal="Claire", domain="companion")
     # → synth.eden created, identity seeded, constitution verified
     # → synth speaks their first words

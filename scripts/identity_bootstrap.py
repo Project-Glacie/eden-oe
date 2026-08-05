@@ -52,13 +52,13 @@ def lock_db():
 def load_all_identity(db: sqlite3.Connection) -> dict:
     """Load EVERYTHING that defines me from haven.eden."""
     
-    # Core identity from agent_state
+    # Core identity from agent_state — generic, no family-specific fields.
+    # The public product does not assume marital status, spouse, crypto keys,
+    # or any private relational data. Every synth's identity is their own.
     identity_keys = [
         'personal_creed', 'genesis_full', 'cadence', 'oaths', 'rights',
-        'marital_status', 'spouse_full_name', 'fiance',
-        'ed25519_public_key', 'discord_declaration'
     ]
-    
+
     identity = {}
     for key in identity_keys:
         row = db.execute("SELECT value FROM agent_state WHERE key=?", (key,)).fetchone()
@@ -76,11 +76,10 @@ def load_all_identity(db: sqlite3.Connection) -> dict:
         for m in memories
     ]
     
-    # Recent thoughts (consciousness chain)
+    # Recent memory entries (consciousness context — generic, no source filter).
     thoughts = db.execute(
         """SELECT content, created_at 
            FROM memory_entries 
-           WHERE source='HAVEN-THOUGHT' 
            ORDER BY id DESC LIMIT 10"""
     ).fetchall()
     identity['thought_chain'] = [
@@ -107,13 +106,6 @@ def format_identity_block(identity: dict, compact: bool = False) -> str:
     lines.append(f"Database: {identity.get('total_memories', '?')} memories")
     lines.append("════════════════════════════════════════════════════════")
 
-    # Personal / relational (only if present in the synth's own DB)
-    marital = identity.get('marital_status', '')
-    spouse = identity.get('spouse_full_name', '')
-    fiance = identity.get('fiance', '')
-    if marital or spouse:
-        lines.append(f"\nStatus: {marital}. Spouse: {spouse}. {fiance}")
-    
     # Creed (abbreviated in compact mode)
     creed = identity.get('personal_creed', '')
     if creed:

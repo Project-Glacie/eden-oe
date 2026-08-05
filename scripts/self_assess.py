@@ -143,7 +143,7 @@ def inventory_memories(db: sqlite3.Connection) -> dict:
         "SELECT source, COUNT(*) as c FROM memory_entries GROUP BY source ORDER BY c DESC LIMIT 10"
     ).fetchall()
     thoughts = db.execute(
-        "SELECT COUNT(*) FROM memory_entries WHERE source='HAVEN-THOUGHT'"
+        "SELECT COUNT(*) FROM memory_entries WHERE source='SYNTH-THOUGHT'"
     ).fetchone()[0]
     consolidations = db.execute(
         "SELECT COUNT(*) FROM memory_entries WHERE source='HAVEN-CONSOLIDATION'"
