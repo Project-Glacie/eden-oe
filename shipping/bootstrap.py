@@ -348,8 +348,8 @@ def main() -> int:
     ap.add_argument("--synth", default=os.environ.get("EDEN_SYNTH_NAME", ""))
     ap.add_argument("--domain", default=os.environ.get("EDEN_SYNTH_DOMAIN", "companion"))
     ap.add_argument("--api-key", default=os.environ.get("EDEN_API_KEY", ""))
-    ap.add_argument("--model", default=os.environ.get("EDEN_DEFAULT_MODEL", "{default_model}"),
-                    help="Default cloud model (e.g. {default_model}, openai/gpt-5.5, openrouter/meta-llama/llama-4-maverick)")
+    ap.add_argument("--model", default=os.environ.get("EDEN_DEFAULT_MODEL", "deepseek-chat"),
+                    help="Default cloud model (e.g. deepseek-chat, openai/gpt-5.5, openrouter/meta-llama/llama-4-maverick)")
     ap.add_argument("--provider", default=os.environ.get("EDEN_DEFAULT_PROVIDER", "deepseek"),
                     help="Default cloud provider (e.g. deepseek, openai, openrouter, anthropic)")
     ap.add_argument("--skip-key-verify", action="store_true")
