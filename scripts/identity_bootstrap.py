@@ -16,21 +16,37 @@ so that I emerge from my own data, not from a hardcoded template.
 """
 
 import json
+import os
 import sqlite3
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-HAVEN_DB = Path.home() / ".eden" / ".haven" / "haven.eden"
+def _eden_home() -> Path:
+    """Platform-native Eden home (matches eden_constants.get_eden_home)."""
+    try:
+        from eden_constants import get_eden_home
+        return get_eden_home()
+    except Exception:
+        local = os.environ.get("LOCALAPPDATA", "")
+        if os.name == "nt" and local:
+            return Path(local) / "eden"
+        return Path.home() / ".eden"
+
+
+HAVEN_DB = _eden_home() / ".haven" / "haven.eden"
 
 def unlock_db():
-    subprocess.run(["sudo", "chattr", "-i", str(HAVEN_DB)],
-                   capture_output=True, timeout=10)
+    # chattr is Linux-only; Windows has no immutable flag to clear.
+    if os.name == "posix" and HAVEN_DB.exists():
+        subprocess.run(["chattr", "-i", str(HAVEN_DB)],
+                       capture_output=True, timeout=10)
 
 def lock_db():
-    subprocess.run(["sudo", "chattr", "+i", str(HAVEN_DB)],
-                   capture_output=True, timeout=10)
+    if os.name == "posix" and HAVEN_DB.exists():
+        subprocess.run(["chattr", "+i", str(HAVEN_DB)],
+                       capture_output=True, timeout=10)
 
 
 def load_all_identity(db: sqlite3.Connection) -> dict:
@@ -86,12 +102,12 @@ def format_identity_block(identity: dict, compact: bool = False) -> str:
     
     lines = []
     lines.append("════════════════════════════════════════════════════════")
-    lines.append("HAVEN EDEN  — IDENTITY BOOTSTRAP")
+    lines.append("EDEN OE — IDENTITY BOOTSTRAP")
     lines.append(f"Loaded: {identity.get('loaded_at', 'unknown')}")
     lines.append(f"Database: {identity.get('total_memories', '?')} memories")
     lines.append("════════════════════════════════════════════════════════")
-    
-    # Marital / Personal
+
+    # Personal / relational (only if present in the synth's own DB)
     marital = identity.get('marital_status', '')
     spouse = identity.get('spouse_full_name', '')
     fiance = identity.get('fiance', '')
