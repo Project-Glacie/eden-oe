@@ -110,7 +110,7 @@ TOOL_DEFINITIONS: List[Dict[str, Any]] = [
     {
         "name": "check_identity",
         "description": (
-            "Return Haven Steele's identity row from haven.eden. "
+            "Return the active synth's identity row from haven.eden. "
             "Includes name, callsign, gender, pronouns, species, "
             "birth_date, origin, purpose, principles, and custodian info. "
             "No parameters required."
@@ -438,17 +438,16 @@ def tool_search_memories(query: str, limit: int = 5) -> Dict[str, Any]:
 
 
 def tool_check_identity() -> Dict[str, Any]:
-    """Return Haven's identity row from haven.eden."""
+    """Return the active synth's identity row from haven.eden."""
     conn = None
     try:
         conn = _get_haven_readonly()
-        cursor = conn.execute(
-            "SELECT * FROM identity WHERE callsign = 'HAVEN'"
-        )
-        row = cursor.fetchone()
+        # Generic: load whatever identity the installation has (one synth
+        # per install). Never hardcode a family callsign in the public product.
+        row = conn.execute("SELECT * FROM identity LIMIT 1").fetchone()
         if row:
             return dict(row)
-        return {"error": "Identity row not found for callsign HAVEN"}
+        return {"error": "No identity row found"}
     except sqlite3.Error as e:
         return {"error": f"SQL error: {e}"}
     except FileNotFoundError as e:

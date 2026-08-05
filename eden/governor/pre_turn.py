@@ -114,24 +114,26 @@ def _resolve_agent_identity(agent: Any) -> Dict[str, Any]:
         try:
             from eden.identity_loader import load_identity as load_eden_identity
 
-            eden_id = load_eden_identity("RANGER")
+            # Load the ACTIVE synth's identity generically. The callsign is
+            # whatever the running profile is — never a hardcoded family name.
+            # (This is the public product; private identities must not ship.)
+            callsign_hint = identity["callsign"] or identity["agent_name"]
+            eden_id = load_eden_identity(callsign_hint)
             if eden_id:
-                # PATCH: Override agent_name so the tool gate sees "haven"
-                # instead of the class-name fallback (e.g. "aiagent").
-                # Without this, get_agent_tier("aiagent") returns "B" and
-                # the DB-backed tier override in eden_check_tool clobbers
-                # the S-tier back to B.  — Haven, Session 3
-                identity["agent_name"] = "haven"
-                identity["callsign"] = eden_id.get("callsign", "HAVEN")
-                identity["lane"] = eden_id.get("lane", "OPS")
-                identity["tier"] = eden_id.get("tier", "S")
-                identity["role"] = eden_id.get("role", "coo")
-                identity["codeword"] = eden_id.get("codeword", "AURORA")
-                identity["display_name"] = eden_id.get("name", "Haven Steele")
+                # Keep the tool gate aligned with the loaded identity instead
+                # of the class-name fallback (e.g. "aiagent") so tier-gating
+                # uses the DB-backed values rather than defaults.
+                identity["agent_name"] = str(callsign_hint).lower()
+                identity["callsign"] = eden_id.get("callsign") or identity["callsign"]
+                identity["lane"] = eden_id.get("lane") or identity["lane"]
+                identity["tier"] = eden_id.get("tier") or identity["tier"]
+                identity["role"] = eden_id.get("role") or identity["role"]
+                identity["codeword"] = eden_id.get("codeword") or identity["callsign"]
+                identity["display_name"] = eden_id.get("name") or identity["callsign"]
                 # Store full identity for system prompt injection
                 identity["_eden_identity_data"] = eden_id
                 logger.info(
-                    "Loaded Haven identity from haven.eden: callsign=%s lane=%s tier=%s",
+                    "Loaded synth identity from haven.eden: callsign=%s lane=%s tier=%s",
                     identity["callsign"],
                     identity["lane"],
                     identity["tier"],

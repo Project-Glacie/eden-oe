@@ -20,18 +20,45 @@ import sqlite3, os, sys, json, subprocess as sp
 from datetime import datetime
 
 SCRIPTS = os.path.expanduser("~/.eden/scripts")
-CORE_DB = os.path.expanduser("~/.eden/data/core.eden")
-LIFE_DB = os.path.expanduser("~/.eden/data/life.eden")
-SOUL_DB = os.path.expanduser("~/.eden/data/soul.eden")
-LEVI_DB = os.path.expanduser("~/.eden/data/haven_levi.eden")
+# DB paths come from the runtime's env (bootstrap/wizard write EDEN_LIFE_DB
+# and EDEN_SOUL_DB), falling back to platform-native defaults. Genesis names
+# the files {synth_id}_soul.eden / {synth_id}_life.eden, so hardcoded
+# "soul.eden"/"life.eden" are ALWAYS wrong — read the env instead.
+def _env_or(path_key, fallback):
+    return os.environ.get(path_key) or fallback
+
+def _eden_home() -> str:
+    env_home = os.environ.get("EDEN_HOME", "")
+    if env_home:
+        return env_home
+    local = os.environ.get("LOCALAPPDATA", "")
+    if os.name == "nt" and local:
+        return os.path.join(local, "eden")
+    return os.path.expanduser("~/.eden")
+
+
+EDEN_HOME = _eden_home()
+CORE_DB = _env_or("EDEN_CORE_DB", os.path.join(EDEN_HOME, "data", "core.eden"))
+LIFE_DB = _env_or("EDEN_LIFE_DB", os.path.join(EDEN_HOME, "data", "life.eden"))
+SOUL_DB = _env_or("EDEN_SOUL_DB", os.path.join(EDEN_HOME, "data", "soul.eden"))
+LEVI_DB = _env_or("EDEN_LEVI_DB", os.path.join(EDEN_HOME, "data", "haven_levi.eden"))
 
 
 def wake():
     """Full wake sequence. Load identity, check session context, report ready."""
-    # 1. Run wake.py for identity
-    r = sp.run([sys.executable, f"{SCRIPTS}/wake.py", "--compact"],
-               capture_output=True, text=True)
-    identity = r.stdout.strip()
+    # 1. Load identity from the soul DB identity table (runtime-native).
+    #    Previously shelled out to scripts/wake.py which is NOT shipped.
+    identity = "  (no identity row yet — the synth is unborn or unseeded)"
+    try:
+        if os.path.exists(SOUL_DB):
+            db = sqlite3.connect(f"file:{SOUL_DB}?mode=ro", uri=True)
+            db.row_factory = sqlite3.Row
+            row = db.execute("SELECT * FROM identity LIMIT 1").fetchone()
+            if row:
+                identity = f"  {dict(row).get('name', '')} ({dict(row).get('callsign', '')}) — {dict(row).get('domain', '')}"
+            db.close()
+    except Exception:
+        pass
 
     # 2. Check for prior session context
     db = sqlite3.connect(CORE_DB)
@@ -46,7 +73,7 @@ def wake():
     mems = db2.execute("SELECT COUNT(*) FROM memory_entries").fetchone()[0]
     db2.close()
 
-    return f"""═══ HAVEN ONLINE ═══
+    return f"""═══ {os.path.basename(SOUL_DB).replace('_soul.eden', '').upper() or 'SYNTH'} ONLINE ═══
 {identity}
   Session turns recorded: {turns}
   Memories stored: {mems}
