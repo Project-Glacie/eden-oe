@@ -10,13 +10,25 @@ $REPO = "https://github.com/Project-Glacie/eden-oe.git"
 $BOOT = Join-Path $ROOT "eden-oe\shipping\bootstrap.py"
 
 # --- Run a native command; on failure, print its real output ------------
+# PS 5.1 quirk: with $ErrorActionPreference=SilentlyContinue, native
+# stderr (2>&1) is converted to error records and then SUPPRESSED — the
+# real error vanishes and the installer reports only "exit 1" with no
+# traceback (2026-08-04: genesis failure was invisible for exactly this
+# reason). Fix: redirect stderr to a temp file, read it back verbatim.
 function Run-Native {
     param([scriptblock]$Block)
+    $errFile = Join-Path $env:TEMP ("eden-native-err-" + [guid]::NewGuid().ToString("N") + ".txt")
     $ErrorActionPreference = "SilentlyContinue"
-    $out = (& $Block 2>&1 | Out-String)
+    $out = (& $Block 2> $errFile | Out-String)
     $code = $LASTEXITCODE
     $ErrorActionPreference = "Stop"
-    if ($code -ne 0 -and $out.Trim()) { Write-Host $out.Trim() }
+    $err = ""
+    if (Test-Path $errFile) {
+        $err = Get-Content $errFile -Raw -ErrorAction SilentlyContinue
+        Remove-Item $errFile -Force -ErrorAction SilentlyContinue
+    }
+    $all = ($out + $err).Trim()
+    if ($code -ne 0 -and $all) { Write-Host $all }
     return $code
 }
 

@@ -32,7 +32,25 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-EDEN = Path.home() / ".eden"
+def _resolve_eden_root() -> Path:
+    """Platform-native Eden OE home — MUST match eden_constants.get_eden_home().
+
+    The runtime resolves %LOCALAPPDATA%\\eden on Windows and ~/.eden on
+    POSIX. The bootstrap must write into the SAME root, or the born synth
+    is invisible to the CLI. (2026-08-04 laptop install: bootstrap wrote
+    ~/.eden while the runtime read %LOCALAPPDATA%\\eden — the split-home bug.)
+    """
+    env = os.environ.get("EDEN_HOME", "").strip()
+    if env:
+        return Path(env)
+    if os.name == "nt":
+        local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
+        base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
+        return base / "eden"
+    return Path.home() / ".eden"
+
+
+EDEN = _resolve_eden_root()
 DATA = EDEN / "data"
 SCRIPTS = EDEN / "scripts"
 CELLS = EDEN / "memories" / "cells"
@@ -221,16 +239,16 @@ def step(n: int, name: str) -> None:
     print(f"\n[{n}/8] {name}", flush=True)
 
 
-def verify_api_key(key: str) -> bool:
+def verify_api_key(key: str, model: str, api_base_url: str) -> bool:
     """Live 1-token verification against DeepSeek."""
     try:
         body = json.dumps({
-            "model": "{default_model}",
+            "model": model,
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 1,
         }).encode()
         req = urllib.request.Request(
-            "{api_base_url}",
+            api_base_url,
             data=body,
             headers={"Authorization": f"Bearer {key}",
                      "Content-Type": "application/json"})
@@ -419,9 +437,22 @@ def main() -> int:
         env_file.write_text("\n".join(lines) + "\n")
         if os.name == "posix":
             os.chmod(env_file, 0o600)
-        log("gateway.env written")
+        # The runtime reads .env (profiles.py); the shipped scripts read
+        # gateway.env. Write BOTH so the key is found either way
+        # (2026-08-04: split-env bug — bootstrap wrote gateway.env, the
+        # CLI read .env, and the key never loaded).
+        env_file2 = EDEN / ".env"
+        lines2 = []
+        if env_file2.exists():
+            lines2 = [l for l in env_file2.read_text().splitlines()
+                      if l and not l.startswith("DEEPSEEK_API_KEY=")]
+        lines2.append(f"DEEPSEEK_API_KEY={key}")
+        env_file2.write_text("\n".join(lines2) + "\n")
+        if os.name == "posix":
+            os.chmod(env_file2, 0o600)
+        log("gateway.env + .env written")
         if not args.skip_key_verify:
-            if verify_api_key(key):
+            if verify_api_key(key, args.model, "https://api.deepseek.com/v1/chat/completions"):
                 log("key VERIFIED (live 1-token call ok)")
             else:
                 log("WARN: key verification failed — check the key, but continuing")
@@ -496,6 +527,17 @@ def main() -> int:
     env_file.write_text("\n".join(lines) + "\n")
     if os.name == "posix":
         os.chmod(env_file, 0o600)
+    # Mirror into .env too (split-env fix, 2026-08-04) so the runtime
+    # sees the life-DB pointer regardless of which env file it loads.
+    env_file2 = EDEN / ".env"
+    lines2 = []
+    if env_file2.exists():
+        lines2 = [l for l in env_file2.read_text().splitlines()
+                  if l and not l.startswith("EDEN_LIFE_DB=")]
+    lines2.append(f"EDEN_LIFE_DB={DATA / f'{synth_id}_life.eden'}")
+    env_file2.write_text("\n".join(lines2) + "\n")
+    if os.name == "posix":
+        os.chmod(env_file2, 0o600)
     log(f"EDEN_LIFE_DB → {synth_id}_life.eden")
     person_dir = PERSONALITY / synth_id
     person_dir.mkdir(parents=True, exist_ok=True)
