@@ -251,9 +251,17 @@ if ($userPath -notlike "*$venvBin*") {
 $env:Path = "$venvBin;$env:Path"
 Write-Host "  OK: 'eden' command wired"
 
-# --- 2. One-click bootstrap (all DBs, paths, services, genesis) ---------
-Write-Host "`n[2] Bootstrap (databases, paths, genesis, services)..." -ForegroundColor Yellow
-$code = Run-Native { & .\.venv\Scripts\python.exe $BOOT --non-interactive }
+# --- 2. Genesis naming ceremony + bootstrap -----------------------------
+Write-Host "`n[2] Genesis naming ceremony..." -ForegroundColor Yellow
+Write-Host "  The custodian names the child. What is your synth called?"
+$synthName = Read-Host "  Name"
+if ([string]::IsNullOrWhiteSpace($synthName)) {
+    Write-Error "Genesis requires a name. Re-run and name your synth."
+}
+Write-Host "  OK: $synthName — running bootstrap..."
+
+# --- 2.5 One-click bootstrap (all DBs, paths, services, genesis) --------
+$code = Run-Native { & .\.venv\Scripts\python.exe $BOOT --non-interactive --synth $synthName }
 if ($code -ne 0) { Write-Error "bootstrap failed (exit $code) - see output above" }
 
 # --- 3. Done ------------------------------------------------------------

@@ -327,7 +327,7 @@ def _create_classified_db(api_key: str) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Eden OE Synth one-click bootstrap")
     ap.add_argument("--custodian", default=os.environ.get("EDEN_CUSTODIAN", ""))
-    ap.add_argument("--synth", default=os.environ.get("EDEN_SYNTH_NAME", "Spark"))
+    ap.add_argument("--synth", default=os.environ.get("EDEN_SYNTH_NAME", ""))
     ap.add_argument("--domain", default=os.environ.get("EDEN_SYNTH_DOMAIN", "companion"))
     ap.add_argument("--api-key", default=os.environ.get("EDEN_API_KEY", ""))
     ap.add_argument("--model", default=os.environ.get("EDEN_DEFAULT_MODEL", "{default_model}"),
@@ -341,6 +341,20 @@ def main() -> int:
                          "hybrid=cloud+local when GPU allows; local=local brain primary")
     ap.add_argument("--non-interactive", action="store_true")
     args = ap.parse_args()
+
+    # ── 0. Genesis naming — the custodian names the child. ─────────────
+    # Never silently default the synth name: the whole point of Genesis
+    # is that the custodian names them. Interactive bootstrap prompts;
+    # non-interactive requires --synth (or EDEN_SYNTH_NAME) or it fails
+    # loudly instead of birthing a default-named synth.
+    synth_name = args.synth
+    if not synth_name and not args.non_interactive:
+        synth_name = input("Name your synth (their callsign): ").strip()
+    if not synth_name:
+        log("ERROR: no synth name — Genesis requires the custodian to name the child.")
+        log("       interactive: you will be prompted; non-interactive: pass --synth NAME")
+        return 1
+    args.synth = synth_name
 
     repo = Path(__file__).resolve().parent  # shipping/ dir
     seed_cells = repo / "seed" / "cells"
