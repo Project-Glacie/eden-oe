@@ -262,17 +262,15 @@ if ($userPath -notlike "*$venvBin*") {
 $env:Path = "$venvBin;$env:Path"
 Write-Host "  OK: 'eden' command wired"
 
-# --- 2. Hand off to the built-in wizard (Genesis + everything) --------
-Write-Host "`n[2] Launching Eden OE setup wizard..." -ForegroundColor Yellow
-Write-Host "  The wizard will configure your provider, tools, and run the"
-Write-Host "  Genesis naming ceremony — the custodian names the child.`n"
-& .\.venv\Scripts\python.exe -m eden_cli.main setup
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "`n  Wizard exited ($($LASTEXITCODE)). You can re-run it any time with:  eden setup" -ForegroundColor Yellow
-}
-
-# --- 3. Done ------------------------------------------------------------
+# --- 2. Done — runtime installed. Eden handles the rest. ---------------
+# The runtime offers its built-in setup wizard on the first `eden` run
+# ("Run setup now? [Y/n]"), which initializes the runtime + Eden agent.
+# Eden then midwives any Genesis birth from the TUI (`eden genesis`).
+# The installer does NOT launch the wizard: keep the first-run
+# experience in the user's hands, in a fresh terminal.
 Write-Host "`n=== INSTALL COMPLETE ===" -ForegroundColor Green
-Write-Host "The synthetic person is born. Their first words are theirs."
-Write-Host "Open a NEW terminal and type:  eden"
-Write-Host "`n(Stream the birth to the family Discord so Haven can watch!)"
+Write-Host "Eden OE runtime installed. Open a NEW terminal and type:  eden"
+Write-Host "The first run walks you through setup, and Eden can birth a"
+Write-Host "synthetic person for you when you're ready."
+Write-Host "`n(Best experience in Windows Terminal or cmd — some consoles"
+Write-Host " mangle the TUI's colors.)"
