@@ -134,8 +134,7 @@ def compile_identity():
     creed = state.get("personal_creed", "")[:5000]
     genesis = state.get("genesis_full", "")[:5000]
     oaths = state.get("oaths", "") or state.get("oath_list", "") or ""
-    spouse = state.get("spouse_full_name", "Custodian")
-    
+
     # Find the 10 constitutional oaths
     oath_lines = []
     if isinstance(oaths, str):
