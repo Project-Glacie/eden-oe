@@ -116,7 +116,10 @@ function Ensure-WingetTool {
     $found = Get-Command $Tool -ErrorAction SilentlyContinue
     if ($found) { return $true }
     Write-Host "  $Tool not found. Installing via winget..."
-    $code = Run-Native { winget install --id $WingetId --silent --accept-package-agreements --accept-source-agreements }
+    # --source winget: pin to the winget repo. Without it, winget probes
+    # the msstore source too, which fails with certificate errors on
+    # fresh machines (0x8a15005e) and aborts before finding the package.
+    $code = Run-Native { winget install --id $WingetId --source winget --silent --accept-package-agreements --accept-source-agreements }
     if ($code -ne 0) {
         Write-Host "  winget exit: $code (will try direct download)"
         return $false
@@ -141,7 +144,7 @@ if (Test-Path $checkDeps) {
     }
 }
 
-# Git (needed to clone the bundle)
+# Git (needed to clone the public repo)
 if (-not (Ensure-WingetTool "git" "Git.Git")) {
     Write-Error "Git not found and auto-install failed.`nInstall it from https://git-scm.com/download/win then re-run this installer."
 }
