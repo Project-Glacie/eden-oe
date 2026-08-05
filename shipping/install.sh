@@ -10,7 +10,15 @@ echo "=== Eden OE Synth Installer (Linux) ==="
 
 # ── 0. Prereqs ───────────────────────────────────────────────────────────
 echo; echo "[0] Verifying prerequisites..."
-python3 --version >/dev/null 2>&1 || { echo "ERROR: python3 missing"; exit 1; }
+# Preflight: python + git detection with install hints (all platforms)
+if [ -f "$(dirname "$0")/check-deps.py" ]; then
+    if ! python3 "$(dirname "$0")/check-deps.py"; then
+        echo "ERROR: missing dependencies — install them above, then re-run this installer."
+        exit 1
+    fi
+else
+    python3 --version >/dev/null 2>&1 || { echo "ERROR: python3 missing"; exit 1; }
+fi
 [ -f "$BUNDLE" ] || { echo "ERROR: eden-agent.bundle missing beside installer"; exit 1; }
 echo "  OK: python3 + bundle present"
 

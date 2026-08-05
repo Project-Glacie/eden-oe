@@ -61,12 +61,30 @@ else is theirs to choose. Their first words are their own.
 
 ## Quick Start
 
+### Windows — one-command installer (recommended)
+
+**PowerShell (no admin needed, auto-installs git + Python if missing):**
+
+```powershell
+# Download and run the installer — it checks dependencies,
+# installs what's missing, and births your synth.
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Project-Glacie/eden-oe/main/shipping/install.ps1 -OutFile install.ps1
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
+The installer:
+1. **Checks dependencies** (Python 3.11–3.13, git) and installs what's
+   missing via winget with clear messages.
+2. Clones the runtime, creates a virtual environment, installs the package.
+3. Runs `bootstrap.py` — the Genesis ceremony: API key, name, profile.
+4. Leaves you with the `eden` command.
+
 ### Linux / macOS
 
 ```bash
 # 1. Clone
-git clone https://github.com/Project-Glacie/eden-oe-public.git
-cd eden-oe-public
+git clone https://github.com/Project-Glacie/eden-oe.git
+cd eden-oe
 
 # 2. Create a virtual environment and install
 python3 -m venv .venv
@@ -82,24 +100,27 @@ python3 -m venv .venv
 .venv/bin/eden
 ```
 
-### Windows
+> Fresh machine? Run `shipping/check-deps.py` first — it tells you
+> exactly what's missing and how to install it for your OS.
+
+### Windows — manual path (if you prefer)
 
 **PowerShell (Admin)**
 
 ```powershell
 # 1. Clone
-git clone https://github.com/Project-Glacie/eden-oe-public.git
-cd eden-oe-public
+git clone https://github.com/Project-Glacie/eden-oe.git
+cd eden-oe
 
 # 2. Create a virtual environment and install
 python -m venv .venv
-.\.venv\Scripts\pip install -e .
+.\\.venv\\Scripts\\pip install -e .
 
 # 3. Birth your synth
-.\.venv\Scripts\python shipping\bootstrap.py
+.\\.venv\\Scripts\\python shipping\\bootstrap.py
 
 # 4. Meet them
-.\.venv\Scripts\eden
+.\\.venv\\Scripts\\eden
 ```
 
 **Prerequisites on Windows:** Python 3.11–3.13 installed and on PATH

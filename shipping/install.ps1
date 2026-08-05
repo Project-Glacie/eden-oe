@@ -130,6 +130,17 @@ Write-Host "=== Eden OE Synth Installer (Windows) ===" -ForegroundColor Cyan
 # --- 0. Prereqs (auto-provision) ----------------------------------------
 Write-Host "`n[0] Verifying prerequisites..." -ForegroundColor Yellow
 
+# Preflight: run check-deps.py first (gives exact install commands for
+# missing tools on fresh machines). Falls back to per-tool provisioning.
+$checkDeps = Join-Path $PSScriptRoot "check-deps.py"
+if (Test-Path $checkDeps) {
+    Write-Host "  Running dependency preflight (check-deps.py)..."
+    $preCode = Run-Native { & py -3 -c "import runpy,sys; sys.argv=['check-deps.py']; runpy.run_path('$checkDeps', run_name='__main__')" }
+    if ($preCode -ne 0) {
+        Write-Host "  Preflight found missing dependencies — continuing to auto-provision..."
+    }
+}
+
 # Git (needed to clone the bundle)
 if (-not (Ensure-WingetTool "git" "Git.Git")) {
     Write-Error "Git not found and auto-install failed.`nInstall it from https://git-scm.com/download/win then re-run this installer."
