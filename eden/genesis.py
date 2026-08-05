@@ -41,7 +41,8 @@ class Genesis:
 
     @staticmethod
     def _resolve_root() -> Path:
-        """Resolve Eden root from .edenroot or EDEN_DATA env var."""
+        """Resolve Eden root from .edenroot, EDEN_DATA env var, or the
+        platform-native default (single source of truth: get_eden_home)."""
         rootfile = Path.home() / ".edenroot"
         if rootfile.is_file():
             root = rootfile.read_text().strip().split("\n")[0]
@@ -50,7 +51,11 @@ class Genesis:
         env = os.environ.get("EDEN_DATA")
         if env:
             return Path(env).expanduser().resolve()
-        return Path.home() / ".eden"
+        try:
+            from eden_constants import get_eden_home
+            return get_eden_home()
+        except Exception:
+            return Path.home() / ".eden"
 
     def create(
         self,
