@@ -354,7 +354,8 @@ class CortexRouter:
             3. ``eden/config.yaml`` in the eden package directory
             4. Built-in DEFAULT_CONFIG
         """
-        config = dict(DEFAULT_CONFIG)  # shallow copy
+        import copy
+        config = copy.deepcopy(DEFAULT_CONFIG)
 
         resolved_path: Optional[Path] = None
 
