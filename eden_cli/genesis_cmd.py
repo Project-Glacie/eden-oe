@@ -159,11 +159,16 @@ def wire_synth_runtime(
     # Config wiring — BOTH consumers (Phase 0 findings):
     #   config['personality']            → gateway/doctor paths
     #   config['agent']['personalities'] → TUI /personality + boot
+    #   config['agent']['system_prompt'] → TUI boot persona (cli.py:3908)
     config = load_config()
     config["personality"] = synth_id
     agent = config.setdefault("agent", {})
     personalities = agent.setdefault("personalities", {})
     personalities[synth_id] = {"system_prompt": prompt, "description": f"{synth_name} — born via Genesis"}
+    # Boot the synth by default on TUI restart (Phase 5, 2026-08-05):
+    # cli.py reads agent.system_prompt at session start, so setting it
+    # here means the next `eden` launch comes up AS the synth, not Eden.
+    agent["system_prompt"] = prompt
     save_config(config)
 
     # Hooks (identity injection + memory capture)
