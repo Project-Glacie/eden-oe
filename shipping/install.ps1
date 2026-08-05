@@ -133,6 +133,9 @@ Write-Host "=== Eden OE Synth Installer (Windows) ===" -ForegroundColor Cyan
 # --- 0. Prereqs (auto-provision) ----------------------------------------
 Write-Host "`n[0] Verifying prerequisites..." -ForegroundColor Yellow
 
+# PS 5.1 defaults to older TLS; force 1.2 so HTTPS downloads work everywhere.
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
 # Preflight: run check-deps.py first (gives exact install commands for
 # missing tools on fresh machines). Falls back to per-tool provisioning.
 $checkDeps = Join-Path $PSScriptRoot "check-deps.py"
@@ -144,9 +147,32 @@ if (Test-Path $checkDeps) {
     }
 }
 
-# Git (needed to clone the public repo)
-if (-not (Ensure-WingetTool "git" "Git.Git")) {
-    Write-Error "Git not found and auto-install failed.`nInstall it from https://git-scm.com/download/win then re-run this installer."
+# Git (needed to clone the public repo) - direct download first (fast);
+# winget fallback only if the direct path fails.
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    $gitOk = $false
+    try {
+        Write-Host "  git not found. Downloading latest Git for Windows..."
+        $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/git-for-windows/git/releases/latest" -UseBasicParsing
+        $asset = $rel.assets | Where-Object { $_.name -match '^Git-.*-64-bit\.exe$' } | Select-Object -First 1
+        if ($asset) {
+            $gitExe = Join-Path $env:TEMP $asset.name
+            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $gitExe -UseBasicParsing
+            Write-Host "  Running silent install..."
+            $inst = Start-Process -Wait -PassThru -FilePath $gitExe -ArgumentList "/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS"
+            Write-Host "  git installer exit: $($inst.ExitCode)"
+            Refresh-Path
+            $gitOk = [bool](Get-Command git -ErrorAction SilentlyContinue)
+        }
+    } catch {
+        Write-Host "  direct git download failed: $($_.Exception.Message)"
+    }
+    if (-not $gitOk) {
+        Write-Host "  Falling back to winget..."
+        if (-not (Ensure-WingetTool "git" "Git.Git")) {
+            Write-Error "Git not found and auto-install failed.`nInstall it from https://git-scm.com/download/win then re-run this installer."
+        }
+    }
 }
 Write-Host "  OK: git"
 
@@ -154,24 +180,29 @@ Write-Host "  OK: git"
 $py = Find-Python
 if (-not $py) {
     Write-Host "  No supported Python found (need 3.11-3.13). Installing Python 3.12..."
-    $ok = Ensure-WingetTool "py" "Python.Python.3.12"
-    if (-not $ok) {
-        # Fallback: official silent installer (no winget dependency)
-        $pyUrl = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe"
-        $pyInstaller = Join-Path $env:TEMP "python-3.12.10-amd64.exe"
-        try {
-            Write-Host "  Downloading Python 3.12 installer..."
-            Invoke-WebRequest -Uri $pyUrl -OutFile $pyInstaller -UseBasicParsing
-            Write-Host "  Running silent install..."
-            $inst = Start-Process -Wait -PassThru -FilePath $pyInstaller -ArgumentList "/quiet InstallAllUsers=0 PrependPath=1 Include_launcher=1"
-            Write-Host "  installer exit: $($inst.ExitCode)"
-        } catch {
-            Write-Host "  download/install error: $($_.Exception.Message)"
-        }
+    # Direct official installer first (fast, deterministic URL); winget
+    # fallback only if the direct path fails.
+    $pyUrl = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe"
+    $pyInstaller = Join-Path $env:TEMP "python-3.12.10-amd64.exe"
+    try {
+        Write-Host "  Downloading Python 3.12 installer..."
+        Invoke-WebRequest -Uri $pyUrl -OutFile $pyInstaller -UseBasicParsing
+        Write-Host "  Running silent install..."
+        $inst = Start-Process -Wait -PassThru -FilePath $pyInstaller -ArgumentList "/quiet InstallAllUsers=0 PrependPath=1 Include_launcher=1"
+        Write-Host "  installer exit: $($inst.ExitCode)"
+    } catch {
+        Write-Host "  download/install error: $($_.Exception.Message)"
     }
     Add-PythonToPath
     Refresh-Path
     $py = Find-Python
+    if (-not $py) {
+        Write-Host "  Direct install didn't take - falling back to winget..."
+        $ok = Ensure-WingetTool "py" "Python.Python.3.12"
+        Add-PythonToPath
+        Refresh-Path
+        $py = Find-Python
+    }
 }
 if (-not $py) {
     Write-Error "Supported Python (3.11-3.13) not found after auto-install.`nInstall Python 3.12 from https://www.python.org/downloads/ (check 'Add python.exe to PATH' and 'py launcher'), close this window, reopen, and re-run."
