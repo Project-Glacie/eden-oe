@@ -7,7 +7,7 @@
 $ErrorActionPreference = "Stop"
 $ROOT = "C:\eden-oe"
 $REPO = "https://github.com/Project-Glacie/eden-oe.git"
-$BOOT = Join-Path $PSScriptRoot "bootstrap.py"
+$BOOT = Join-Path $ROOT "eden-oe\shipping\bootstrap.py"
 
 # --- Run a native command; on failure, print its real output ------------
 function Run-Native {

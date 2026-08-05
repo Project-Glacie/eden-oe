@@ -4,7 +4,7 @@
 set -uo pipefail
 ROOT="${HOME}/eden-oe"
 REPO="https://github.com/Project-Glacie/eden-oe.git"
-BOOT="$(dirname "$0")/bootstrap.py"
+BOOT="$ROOT/eden-oe/shipping/bootstrap.py"
 
 echo "=== Eden OE Synth Installer (Linux) ==="
 
