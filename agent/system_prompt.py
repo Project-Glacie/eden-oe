@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional
 
 from agent.prompt_builder import (
     DEFAULT_AGENT_IDENTITY,
+    EDEN_ONBOARDING_PROTOCOL,
     GOOGLE_MODEL_OPERATIONAL_GUIDANCE,
     EDEN_OS_HELP_GUIDANCE,
     KANBAN_GUIDANCE,
@@ -192,6 +193,11 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     if not _soul_loaded:
         # Fallback to hardcoded identity
         stable_parts.append(DEFAULT_AGENT_IDENTITY)
+        # Fresh install (no synth yet): Eden also carries the onboarding
+        # protocol so he can midwife a Genesis birth. Once a synth's
+        # SOUL.md exists, this block is replaced by their identity.
+        if getattr(agent, "_eden_onboarding", True):
+            stable_parts.append(EDEN_ONBOARDING_PROTOCOL)
 
     # Pointer to the Eden OS skill + docs for user questions about Eden OS itself.
     stable_parts.append(EDEN_OS_HELP_GUIDANCE)
