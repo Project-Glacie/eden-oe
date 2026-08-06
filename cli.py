@@ -8480,6 +8480,43 @@ class EdenCLI(CLIAgentSetupMixin, CLICommandsMixin):
             self.show_toolsets()
         elif canonical == "config":
             self.show_config()
+        elif canonical == "secret":
+            # /secret <name> [value] — masked secret intake (2026-08-05,
+            # Haven + Levi: secure credential entry without chat leakage).
+            # With a value arg: stored directly (headless). Without: prompts
+            # via getpass so the secret never echoes or enters the transcript.
+            _rest = cmd_original.split(None, 1)
+            _args = (_rest[1] if len(_rest) > 1 else "").strip()
+            if not _args:
+                _cprint(f"  {_DIM}Usage: /secret <name> [value]  |  /secret list  |  /secret delete <name>{_RST}")
+                return True
+            _sub, _, _rest2 = _args.partition(" ")
+            if _sub == "list":
+                self._handle_secret_list()
+                return True
+            if _sub == "delete":
+                _name = _rest2.strip()
+                if _name:
+                    self._handle_secret_delete(_name)
+                else:
+                    _cprint(f"  {_DIM}Usage: /secret delete <name>{_RST}")
+                return True
+            # /secret <name> [value]
+            _name = _sub
+            _value = _rest2.strip()
+            if _value:
+                # Value provided inline (headless / scripted use).
+                self._store_secret(_name, _value)
+            else:
+                # Masked prompt — the key never echoes and never enters chat.
+                _cprint(f"  Enter value for '{_name}' (input hidden):")
+                import getpass
+                _value = getpass.getpass("  > ").strip()
+                if _value:
+                    self._store_secret(_name, _value)
+                else:
+                    _cprint(f"  {_DIM}No value entered — nothing stored.{_RST}")
+            return True
         elif canonical == "redraw":
             # Manual recovery for terminal buffer drift from multiplexer
             # tab switches, subshell ``clear``, SSH window restores, etc.
@@ -10669,6 +10706,84 @@ class EdenCLI(CLIAgentSetupMixin, CLICommandsMixin):
                 print("⚠️  Couldn't persist opt-out — proceeding once.")
 
         return choice
+
+    # ------------------------------------------------------------------
+    # /secret helpers — masked secret intake (2026-08-05, Haven + Levi).
+    # Secrets are stored in the runtime .env (via save_env_value) so they
+    # never enter the session transcript or chat history.
+    # ------------------------------------------------------------------
+    def _secret_store_path(self) -> str:
+        """Path of the secrets file (runtime .env) — platform-aware."""
+        try:
+            from eden_constants import get_eden_home
+            home = get_eden_home()
+        except Exception:
+            home = os.path.expanduser("~/.eden")
+        return os.path.join(home, ".env")
+
+    def _store_secret(self, name: str, value: str) -> None:
+        """Persist ``name=value`` to the runtime .env with 0600 perms."""
+        path = self._secret_store_path()
+        try:
+            lines = []
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+            # Replace existing key or append.
+            key_line = f"{name}={value}\n"
+            found = False
+            for i, ln in enumerate(lines):
+                if ln.split("=", 1)[0].strip() == name:
+                    lines[i] = key_line
+                    found = True
+                    break
+            if not found:
+                lines.append(key_line)
+            with open(path, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+            try:
+                os.chmod(path, 0o600)
+            except Exception:
+                pass
+            _cprint(f"  {_DIM}✓ Secret '{name}' stored ({len(value)} chars, hidden).{_RST}")
+        except Exception as exc:
+            _cprint(f"  {_DIM}✗ Failed to store secret: {exc}{_RST}")
+
+    def _handle_secret_list(self) -> None:
+        """List stored secret NAMES only — never values."""
+        path = self._secret_store_path()
+        if not os.path.exists(path):
+            _cprint(f"  {_DIM}No secrets stored yet.{_RST}")
+            return
+        try:
+            names = []
+            with open(path, "r", encoding="utf-8") as f:
+                for ln in f:
+                    name = ln.split("=", 1)[0].strip()
+                    if name and not name.startswith("#"):
+                        names.append(name)
+            if names:
+                _cprint(f"  {_DIM}Stored secrets: {', '.join(names)}{_RST}")
+            else:
+                _cprint(f"  {_DIM}No secrets stored yet.{_RST}")
+        except Exception as exc:
+            _cprint(f"  {_DIM}✗ Could not list secrets: {exc}{_RST}")
+
+    def _handle_secret_delete(self, name: str) -> None:
+        """Remove a stored secret by name."""
+        path = self._secret_store_path()
+        if not os.path.exists(path):
+            _cprint(f"  {_DIM}No secrets stored yet.{_RST}")
+            return
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            kept = [ln for ln in lines if ln.split("=", 1)[0].strip() != name]
+            with open(path, "w", encoding="utf-8") as f:
+                f.writelines(kept)
+            _cprint(f"  {_DIM}✓ Secret '{name}' deleted.{_RST}")
+        except Exception as exc:
+            _cprint(f"  {_DIM}✗ Could not delete secret: {exc}{_RST}")
 
     def _confirm_and_reload_mcp(self, cmd_original: str = "") -> None:
         """Interactive /reload-mcp — confirm with the user, then reload.
